@@ -9,6 +9,7 @@ import { DossierPanel } from "@/components/DossierPanel";
 import { Legend } from "@/components/Legend";
 import { IntroOverlay } from "@/components/IntroOverlay";
 import { SwarmPanel } from "@/components/SwarmPanel";
+import { TopoDissolve } from "@/components/TopoDissolve";
 import type { Candidate, DocumentedWells, Dossier, Meta } from "@/lib/types";
 import { loadCandidates, loadDocumented, loadDossiers, loadHeroes, loadMeta } from "@/lib/data";
 import { fmtInt } from "@/lib/format";
@@ -35,6 +36,7 @@ export default function Page() {
   const [swarmOpen, setSwarmOpen] = useState(false);
   const [focus, setFocus] = useState<FocusTarget | null>(null);
   const [fitNonce, setFitNonce] = useState(0);
+  const [topoHero, setTopoHero] = useState<Candidate | null>(null);
   const nonce = useRef(0);
 
   useEffect(() => {
@@ -223,6 +225,7 @@ export default function Page() {
               candidate={selected}
               dossier={dossiers[selected.well_id]}
               onClose={() => setSelectedId(null)}
+              onTopoDissolve={selected.hero ? () => setTopoHero(selected) : undefined}
             />
           </motion.div>
         )}
@@ -263,6 +266,8 @@ export default function Page() {
         documentedCount={meta?.documented_count ?? 117672}
         candidateCount={meta?.candidate_count ?? 1303}
       />
+
+      {topoHero && <TopoDissolve hero={topoHero} onClose={() => setTopoHero(null)} />}
     </main>
   );
 }

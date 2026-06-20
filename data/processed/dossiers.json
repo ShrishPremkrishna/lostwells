@@ -1,0 +1,530 @@
+{
+  "hero_admiral_king_oh": {
+    "narrative": "In October 2014, a previously undocumented pre-regulatory-era oil/gas well beneath the gymnasium floor of Admiral King Elementary School in Lorain, Ohio began leaking methane, triggering evacuation of ~375 students and staff and a five-week search before ODNR identified the source. The well had no named operator on record \u2014 consistent with wells drilled before Ohio's 1960s permitting regulations \u2014 and was plugged under ODNR's Orphan Well Program emergency authority at a direct cost of ~$100,000, with total district costs (gym demolition and reconstruction) exceeding $1 million. The incident became Ohio's most prominent orphan well public-safety case and directly drove the 2018 legislation increasing the Orphan Well Program's funding share from 14% to 30% of the state's Oil and Gas Well Fund; with 11 schools within 1 mile and Lorain County ranking among Ohio's highest-density undocumented-well zones, residual subsurface risk in the immediate area cannot be ruled out without further systematic survey.",
+    "operator_history": "No original operator is documented for this well. It predates Ohio's oil and gas permitting regulations established in the 1960s and was entirely absent from ODNR records until discovered via methane leak in 2014. Regional drilling history is attributed to the late-1800s/early-1900s oil boom driven by John D. Rockefeller's Cleveland-area refineries, but no individual driller or company is traceable to this specific well.",
+    "bankruptcy_findings": "Not found on the record. Because no operator was ever documented for this well, there is no corporate chain-of-title, transfer event, or bankruptcy proceeding that can be associated with it. The well almost certainly predates any surviving corporate records by at least 50\u2013100 years.",
+    "news_findings": "The Admiral King Elementary incident is one of the most widely reported orphan well events in Ohio history. Coverage spans local (Fox 8 Cleveland WJW, Crain's Cleveland Business, The Land CLE) and national outlets (NRDC, Canary Media). The case is consistently cited in advocacy and legislative contexts \u2014 most notably as the catalyst for Ohio H.B. 225 (2018), which tripled the Orphan Well Program's mandatory funding share \u2014 and remains a reference example in ongoing reporting on ODNR drone-detection programs and federal Bipartisan Infrastructure Law funding for orphan well remediation as recently as 2025.",
+    "well_id": "hero_admiral_king_oh",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:18:36.688427Z",
+    "sources": [
+      {
+        "title": "Abandoned oil wells in Cuyahoga County could be capped under new federal program \u2013 The Lan",
+        "url": "https://thelandcle.org/stories/abandoned-oil-wells-in-cuyahoga-county-could-be-capped-under-new-federal-program/"
+      },
+      {
+        "title": "New law speeds up plugging of abandoned oil, gas wells - Ohio Farm Bureau",
+        "url": "https://ofbf.org/2019/07/23/new-law-speeds-plugging-abandoned-oil-gas-wells/"
+      },
+      {
+        "title": "Our Advocacy at Work: OEC scores a victory on orphan wells | Ohio Environmental Council",
+        "url": "https://theoec.org/our-advocacy-at-work-oec-scores-a-victory-on-orphan-wells/"
+      },
+      {
+        "title": "Ohio Gains Ground on a Hidden Hazard: More Than a Century\u2019s Worth of Abandoned Oil and Gas",
+        "url": "https://www.nrdc.org/stories/ohio-gains-ground-hidden-hazard-more-centurys-worth-abandoned-oil-and-gas-wells"
+      },
+      {
+        "title": "Lorain elementary school closed by gas leak reopens | Fox 8 Cleveland WJW",
+        "url": "https://fox8.com/news/lorain-elementary-school-closed-by-gas-leak-reopens/"
+      },
+      {
+        "title": "Lorain High School",
+        "url": "https://en.wikipedia.org/wiki/Lorain_High_School"
+      },
+      {
+        "title": "Kingwood Elementary evacuated for kitchen fire",
+        "url": "https://www.yahoo.com/news/kingwood-elementary-evacuated-kitchen-fire-201813366.html"
+      },
+      {
+        "title": "Watch CBS News",
+        "url": "https://www.cbsnews.com/texas/news/gas-leak-prompts-elementary-school-evacuation"
+      }
+    ],
+    "status": "complete"
+  },
+  "hero_allenco_la": {
+    "narrative": "The AllenCo / St. James site at 23rd Street and Figueroa in University Park, Los Angeles (34.03880, -118.27890) comprises 21 urban oil wells drilled in the 1960s on land owned by the Archdiocese of Los Angeles, operated successively by ARCO, St. James Oil Corporation, and \u2014 from 2009 \u2014 AllenCo Energy Inc., which boosted production 400% before years of resident illness reports, 340 state complaints, 16 state notices of violation, EPA Clean Air and Clean Water Act citations, $99,000+ in federal fines, and a 2014 city civil suit culminated in a 2020 CalGEM plug order; AllenCo refused compliance, forcing a 2022 court-ordered bolt-cutter entry by state regulators, and all 21 wells were finally permanently plugged by state contractor Driltek in February 2026. The site is an environmental justice flashpoint: roughly 800 residents within 600 feet in an ~80% Latino neighborhood suffered documented nosebleeds, headaches, asthma, and chronic respiratory illness for over a decade; even EPA inspectors became ill during their November 2013 site visit. The 1953 USGS topographic quad detection (LBNL U-Net) confirms surface infrastructure was already in place over 70 years ago, and the multi-decade ownership shuffle from ARCO \u2192 St. James Oil (insolvent, ~$500K in debts) \u2192 AllenCo (via debt-for-lease swap) is a textbook liability-laundering chain that left a densely populated, low-income community holding the cleanup burden.",
+    "operator_history": "ARCO (Atlantic Richfield Company) was the original operator, leasing two acres from the Archdiocese of Los Angeles for oil drilling. The operating lease subsequently passed to St. James Oil Corporation, which drilled or maintained the 21 production wells beginning in the 1960s. St. James Oil made failed investments outside California, ceased oil production, and incurred over $500,000 in debts to AllenCo Well Service (Signal Hill, CA). Around 2009, the founder of AllenCo Well Service acquired the St. James lease in lieu of those debts and rebranded the operating entity as AllenCo Energy Inc., which restarted five wells in 2010 and ramped total production by ~400%. Land ownership is bifurcated: the Archdiocese of Los Angeles owns the surface two-acre parcel; the City of Los Angeles owns mineral rights under a portion of the site (St. James Exploratory Oil and Gas Lease, approved 1963), with royalties paid to both the Archdiocese and hundreds of individual Angelenos through 2013.",
+    "bankruptcy_findings": "No formal bankruptcy filing by AllenCo Energy Inc. was found on the public record. However, the predecessor operator St. James Oil Corporation effectively became insolvent \u2014 ceasing oil production and accumulating over $500,000 in unpaid debts to AllenCo Well Service \u2014 and the operating lease was transferred to AllenCo around 2009 as a debt-for-lease swap rather than through a formal bankruptcy proceeding. AllenCo itself later refused to fund plugging, claiming it lacked the 'further capital' to do so, and disputed liability by arguing that its right to operate had been extinguished, leaving the state to fund the $700,000+ plugging operation through CalGEM's orphaned-well program.",
+    "news_findings": "Extensively documented in local and national press. Key findings: (1) Residents made 340+ state complaints and 250+ air-quality calls over 3+ years reporting nosebleeds, headaches, asthma, and chronic respiratory illness. (2) EPA inspectors became ill during a November 2013 site visit, triggering a voluntary shutdown at Sen. Barbara Boxer's request. (3) EPA issued $99,000+ in fines for Clean Air Act and Clean Water Act violations (January 2014); a consent order required ~$700,000 in facility upgrades (April 2014). (4) City of Los Angeles filed civil enforcement action in 2014; LA City Attorney pursued criminal misdemeanor charges in August 2020. (5) CalGEM issued Plug and Abandonment Order March 5, 2020, citing 'desertion' of the facility. (6) CalGEM executed a court-ordered search warrant with bolt cutters in March 2022 after AllenCo refused access. (7) Community advocacy groups (Esperanza Community Housing / 'People Not Pozos') and USC Daily Trojan sustained years of public pressure; residents sent a video plea to Pope Francis urging the Archdiocese to terminate the lease. (8) All 21 wells permanently plugged by state contractor Driltek; Governor Newsom announced completion February 11, 2026.",
+    "well_id": "hero_allenco_la",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:18:36.689219Z",
+    "sources": [
+      {
+        "title": "Our Neighborhoods vs. Big Oil | Green America",
+        "url": "https://greenamerica.org/communities-frontlines-climate-crisis/our-neighborhoods-vs-big-oil"
+      },
+      {
+        "title": "AllenCo Oil Production Facility (Los Angeles)",
+        "url": "https://www.conservation.ca.gov/calgem/Pages/AllenCo.aspx"
+      },
+      {
+        "title": "California Permanently Closes AllenCo Oil Wells, Ending Years of Community Harm -",
+        "url": "https://www.randomlengthsnews.com/archives/2026/02/12/california-closes-allenco-oil-wells/74240"
+      },
+      {
+        "title": "A toxic breeze: South LA residents organize as concerns rise over oil site",
+        "url": "https://dailytrojan.com/projects/green/oil-wells.html"
+      },
+      {
+        "title": "California will cap hundreds of orphaned oil wells, some long suspected of causing illness",
+        "url": "https://lookout.co/california-will-cap-hundreds-of-orphaned-oil-wells-some-long-suspected-of-causing-illness/story"
+      },
+      {
+        "title": "Feb 11, 2026",
+        "url": "https://www.gov.ca.gov/2026/02/11/governor-newsom-announces-permanent-closure-of-allenco-oil-wells-ending-years-of-community-harm"
+      },
+      {
+        "title": "Regional CalGEM Focuses",
+        "url": "https://www.conservation.ca.gov/calgem/Pages/Regional-Issues.aspx"
+      },
+      {
+        "title": "L.A. residents ask pope to intervene in oil field fight",
+        "url": "https://www.pressreader.com/usa/los-angeles-times/20150723/281758447983870"
+      }
+    ],
+    "status": "complete"
+  },
+  "hero_vowinckel_pa": {
+    "narrative": "The hero_vowinckel_pa gas well, detected on a 1958 USGS topographic quad and located just six feet from a family's only drinking-water supply in Farmington Township, Clarion County, PA, was confirmed by Pennsylvania DEP to have contaminated that water supply with iron for approximately five months before the state plugged it on October 23\u201324, 2024, using federal IIJA funds. No named operator or permittee of record has been identified for this well in any public document; it was described by DEP as 'orphaned by the well owner,' indicating deliberate abandonment without plugging or legal transfer of liability. The plugging resolves the immediate contamination threat, but the original responsible party has faced no documented accountability, and the well's pre-regulatory vintage makes operator recovery essentially impossible.",
+    "operator_history": "Not found on the record. No named operator, permittee, driller, or corporate owner has been identified in any DEP press release, enforcement document, or news account for this specific well. The well's appearance on a 1958 USGS topographic map places its drilling in the mid-20th century, prior to modern well-decommissioning regulations. DEP characterized it as 'orphaned by the well owner,' implying an original owner who abandoned the well without plugging or proper transfer. The plugging contractor was Plants and Goodwin Services (crew: Robert Windsor, Kevin Haight, rig operator Brendan Green).",
+    "bankruptcy_findings": "Not found on the record. No bankruptcy filing, corporate dissolution, or shell-company transfer was found associated with this well or its unknown operator. The ownership gap is consistent with pre-regulatory abandonment rather than a traceable corporate transaction.",
+    "news_findings": "PA Environment Digest (Oct. 24, 2024) and ExploreClarion (Oct. 25, 2024) reported on the plugging, documenting the 6-foot proximity to the family's water well and DEP-confirmed iron contamination. The Derrick (Oct. 25, 2024) covered the broader regional pattern of abandoned legacy wells in Clarion, Venango, and Forest counties. A May 2025 Inside Climate News/EDF investigation cited this well as a concrete example of orphaned-well groundwater contamination in Pennsylvania, and EDF's 2024\u20132025 drone-survey project specifically targeted Clarion and McKean counties for unregistered well discovery, identifying 250+ candidate sites.",
+    "well_id": "hero_vowinckel_pa",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:18:36.689978Z",
+    "sources": [
+      {
+        "title": "PA Environment Digest Blog: DEP Plugs Conventional Gas Well Orphaned By The Well Owner Tha",
+        "url": "http://paenvironmentdaily.blogspot.com/2024/10/dep-plugs-conventional-gas-well.html"
+      },
+      {
+        "title": "Scientists Map Where Orphan Wells Pose Threats to Aquifers - Inside Climate News",
+        "url": "https://insideclimatenews.org/news/04052025/scientists-map-where-orphan-wells-pose-threats-to-aquifers/"
+      },
+      {
+        "title": "Scientists map where orphan wells pose threats to aquifers - NewsBreak",
+        "url": "https://www.newsbreak.com/pennsylvania-capital-star-563760/3992547799036-scientists-map-where-orphan-wells-pose-threats-to-aquifers"
+      },
+      {
+        "title": "Scientists Map Where Orphan Wells Pose Threats to Aquifers - Eos",
+        "url": "https://eos.org/articles/scientists-map-where-orphan-wells-pose-threats-to-aquifers"
+      },
+      {
+        "title": "INSIDE CLIMATE NEWS: Scientists Map Where Orphan Wells Pose Threats to Aquifers ~ MAVEN'S ",
+        "url": "https://mavensnotebook.com/2025/05/05/inside-climate-news-scientists-map-where-orphan-wells-pose-threats-to-aquifers/"
+      },
+      {
+        "title": "Shapiro Administration Plugs Orphan Well That Contaminated Family\u2019s Water | Department of ",
+        "url": "https://www.pa.gov/agencies/dep/newsroom/shapiro-administration-plugs-orphan-well-that-contaminated-famil"
+      },
+      {
+        "title": "PA Environment Digest Blog: PA Oil & Gas Weekly Compliance Dashboard - October 19 to 25 - ",
+        "url": "http://paenvironmentdaily.blogspot.com/2024/10/pa-oil-gas-weekly-compliance-dashboard_26.html"
+      },
+      {
+        "title": "State DEP Plugs Orphan Gas Well That Contaminated Vowinckel Family\u2019s Drinking Water - expl",
+        "url": "http://www.exploreclarion.com/local/2024/10/24/state-dep-plugs-orphan-gas-well-that-contaminated-vowinckel-familys-drinking-water-829920/"
+      }
+    ],
+    "status": "complete"
+  },
+  "OK_Britton_705490_1951_24000_geo_41": {
+    "narrative": "Well OK_Britton_705490_1951_24000_geo_41 is an undocumented well detected only via machine-learning analysis of a 1951 USGS topographic quadrangle in northern Oklahoma County, Oklahoma; it carries no API number, no operator of record, and no plugging documentation in available OCC databases. Its location in a densely populated tract (~5,198 residents) with six schools within one mile \u2014 including Tulakes Elementary \u2014 triggers federal Environmental Justice prioritization criteria and warrants urgent field inspection. The well is almost certainly a pre-regulatory-era relic from Oklahoma's 1940s\u20131950s drilling boom, and without formal OCC registration it cannot enter the federal IIJA-funded plugging queue until it is discovered, assessed, and categorized.",
+    "operator_history": "Not found on the record. No API number, lease assignment, or named operator could be identified for this specific well. It appears solely on the 1951 USGS Britton 1:24,000 topographic quadrangle as detected by the LBNL U-Net model, suggesting it predates or evaded Oklahoma Corporation Commission (OCC) electronic registration. It was likely drilled during Oklahoma's second oil boom (peak: 1953\u20131956) or immediately prior, by an unidentified wildcatter or small independent operator whose records have not been digitized or may no longer exist.",
+    "bankruptcy_findings": "Not found on the record. No chain-of-title, lease transfer, or bankruptcy filing could be identified for this well, which is a direct consequence of its undocumented status. Oklahoma's $25,000 Category B surety bonding requirement only dates to June 7, 1989, meaning any operator who drilled and abandoned this ~1950s-era well faced no bonding obligation and left no financial assurance instrument that could be traced.",
+    "news_findings": "Not found on the record for this specific well or location. At the state level, Oklahoma regulators have faced documented criticism for failing to hold operators accountable for purging and leaking orphaned wells, and a ProPublica/Grist investigation found a 'culture problem' within the OCC's pollution abatement enforcement as recently as 2023. No local Oklahoma County or Britton-area news coverage of this specific well was located.",
+    "well_id": "OK_Britton_705490_1951_24000_geo_41",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:18:36.691074Z",
+    "sources": [
+      {
+        "title": "An Oklahoma wildlife refuge has widespread abandoned oil, gas wells. This group is cleanin",
+        "url": "https://www.kosu.org/show/stateimpact-oklahoma/2025-02-27/an-oklahoma-wildlife-refuge-has-widespread-abandoned-oil-gas-wells-this-group-is-cleaning-them-up"
+      },
+      {
+        "title": "IDLE AND ORPHAN OIL AND GAS WELLS - Oklahoma.gov",
+        "url": "https://oklahoma.gov/content/dam/ok/en/iogcc/documents/publications/Orphan%20Wells%20Revised.pdf"
+      },
+      {
+        "title": "Overcoming Oklahoma\u2019s Orphaned and Abandoned Well Problem - Oklahoma Bar Association",
+        "url": "https://www.okbar.org/barjournal/may-2024/overcoming-oklahomas-orphaned-and-abandoned-well-problem/"
+      },
+      {
+        "title": "PROBLEMS AND PLANS Plugging Oklahoma\u2019s Abandoned Oil and Gas wells",
+        "url": "https://oklahoma.gov/content/dam/ok/en/occ/documents/og/OCC-Plan-Addressing-Orphaned-Well-Plugging-Challenges.pdf"
+      },
+      {
+        "title": "First Oil Well in Oklahoma",
+        "url": "https://en.wikipedia.org/wiki/First_Oil_Well_in_Oklahoma"
+      },
+      {
+        "title": "Orphan wells",
+        "url": "https://en.wikipedia.org/wiki/Orphan_wells"
+      },
+      {
+        "title": "edf.org Orphan Wells Are Threatening Oklahoma Communities",
+        "url": "https://www.edf.org/sites/default/files/2021-10/Orphan%20Well%20FactSheet%20OK.pdf"
+      },
+      {
+        "title": "Oklahoma OCC Reports 20,406 Orphaned Wells | GovPing",
+        "url": "https://changeflow.com/govping/environment/oklahoma-orphaned-well-plugging-challenges-report-2026-04-20"
+      }
+    ],
+    "status": "complete"
+  },
+  "OK_Britton_705492_1951_24000_geo_51": {
+    "narrative": "Well OK_Britton_705492_1951_24000_geo_51 is an undocumented orphaned well in Oklahoma County, Oklahoma (35.53848\u00b0N, -97.62238\u00b0W), detected solely from its symbol on the 1951 Britton USGS 1:24,000 topographic quadrangle via LBNL's U-Net AI model \u2014 no operator, permit, or plugging record has been found in publicly accessible OCC or IOGCC databases. The site lies within a densely populated urban census tract (~5,198 residents) with five schools within one mile, placing it in a high-priority environmental justice category under federal Infrastructure Law plugging criteria. Oklahoma currently reports over 20,406 orphaned wells statewide and operates a joint OCC/OERB plugging and remediation program funded by producer excise taxes and a $25M federal IIJA grant, but undocumented wells cannot be acted upon absent an active environmental or safety threat, making field verification an urgent precondition for any regulatory action.",
+    "operator_history": "Not found on the record. No named operator, driller, permit number, or API well number has been identified for this specific coordinate in any publicly available OCC RBDMS, IOGCC, or state well-finder database. The 1951 detection date is consistent with small independent operators active in the Oklahoma City Oil Field area during the post-WWII drilling era, a period when documentation compliance was inconsistent and many marginal wells were drilled without full regulatory filings.",
+    "bankruptcy_findings": "Not found on the record. No ownership transfer, lease assignment, or bankruptcy proceeding referencing this well location has been identified. The absence of any operator record makes a bankruptcy chain search impossible without first establishing a legal entity associated with the well through archival land-records or title research.",
+    "news_findings": "Not found on the record. No local or regional news coverage referencing a well, spill, contamination event, or enforcement action at or near coordinates 35.53848\u00b0N, -97.62238\u00b0W in Oklahoma County's Britton/Tulakes area has been identified. Statewide news coverage confirms Oklahoma's broader 20,000+ orphaned-well crisis and the OCC's active but federally funding-threatened plugging program, but no site-specific reporting for this location exists in publicly available sources.",
+    "well_id": "OK_Britton_705492_1951_24000_geo_51",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:19:57.789724Z",
+    "sources": [
+      {
+        "title": "An Oklahoma wildlife refuge has widespread abandoned oil, gas wells. This group is cleanin",
+        "url": "https://www.kosu.org/show/stateimpact-oklahoma/2025-02-27/an-oklahoma-wildlife-refuge-has-widespread-abandoned-oil-gas-wells-this-group-is-cleaning-them-up"
+      },
+      {
+        "title": "An Oklahoma wildlife refuge has widespread abandoned oil, gas wells. This group is cleanin",
+        "url": "https://www.kgou.org/energy/2025-02-27/an-oklahoma-wildlife-refuge-has-widespread-abandoned-oil-gas-wells-this-group-is-cleaning-them-up"
+      },
+      {
+        "title": "An Oklahoma wildlife refuge has widespread abandoned oil, gas wells. This group is cleanin",
+        "url": "https://www.hppr.org/hppr-news/2025-02-28/an-oklahoma-wildlife-refuge-has-widespread-abandoned-oil-gas-wells-this-group-is-cleaning-them-up"
+      },
+      {
+        "title": "Overcoming Oklahoma\u2019s Orphaned and Abandoned Well Problem - Oklahoma Bar Association",
+        "url": "https://www.okbar.org/barjournal/may-2024/overcoming-oklahomas-orphaned-and-abandoned-well-problem/"
+      },
+      {
+        "title": "PROBLEMS AND PLANS Plugging Oklahoma\u2019s Abandoned Oil and Gas wells",
+        "url": "https://oklahoma.gov/content/dam/ok/en/occ/documents/og/OCC-Plan-Addressing-Orphaned-Well-Plugging-Challenges.pdf"
+      },
+      {
+        "title": "IDLE AND ORPHAN OIL AND GAS WELLS - Oklahoma.gov",
+        "url": "https://oklahoma.gov/content/dam/ok/en/iogcc/documents/publications/Orphan%20Wells%20Revised.pdf"
+      },
+      {
+        "title": "Oklahoma OCC Reports 20,406 Orphaned Wells | GovPing",
+        "url": "https://changeflow.com/govping/environment/oklahoma-orphaned-well-plugging-challenges-report-2026-04-20"
+      },
+      {
+        "title": "Petroleum Industry | The Encyclopedia of Oklahoma History and Culture",
+        "url": "https://www.okhistory.org/publications/enc/entry.php?entry=pe023"
+      }
+    ],
+    "status": "complete"
+  },
+  "OK_Sand Springs_706749_1956_24000_geo_283": {
+    "narrative": "Well OK_Sand Springs_706749_1956_24000_geo_283 is an undocumented orphaned well detected solely from a 1956 USGS topographic map using LBNL deep learning; it carries no operator of record, no API number, and no entry in any regulatory inventory. The site lies within Osage County, where the OCC has no jurisdiction and the BIA and Osage Nation are the sole regulatory authorities \u2014 a governance gap that has left over 1,600 documented (and an unknown number of undocumented) orphaned wells unaddressed. Its proximity to approximately 5,396 residents and three schools within one mile, combined with the adjacent Sand Springs Petrochemical Complex Superfund Site, makes it a priority candidate for the Osage Nation's active DOE-funded undocumented well identification and plugging program.",
+    "operator_history": "Not found on the record. No operator name, lease, or API number is associated with this well. It exists only as a symbol on the 1956 Sand Springs 1:24,000 USGS topographic quad, detected by the LBNL U-Net model. The BIA has noted that many Osage wells were orphaned more than 50 years ago, making operator identification impossible for wells of this vintage.",
+    "bankruptcy_findings": "Not found on the record. No corporate entity, bankruptcy filing, or ownership transfer record could be identified for this specific well. General context: across Osage County, operators have filed for bankruptcy and abandoned equipment without notification to surface owners, but no such filing is documented for this precise location.",
+    "news_findings": "No local news coverage found for this specific well location. Regional coverage confirms systemic issues: the Grist/Osage News documented saltwater contamination and cattle deaths from orphaned wells across Osage County; the Osage Nation announced completion of its first orphaned well land surveys in April 2024, identifying 1,600+ documented orphaned wells; and in October 2024 the Osage Nation signed a DOE MOU specifically to address undocumented orphaned wells. The nearby Sand Springs Petrochemical Complex Superfund Site (EPA NPL 1986, currently managed by BP/Atlantic Richfield with ongoing groundwater monitoring) represents a confirmed contamination nexus within the same topographic quad.",
+    "well_id": "OK_Sand Springs_706749_1956_24000_geo_283",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:19:58.163792Z",
+    "sources": [
+      {
+        "title": "OCC Plan Addressing Orphaned Well Plugging Challenges",
+        "url": "https://oklahoma.gov/content/dam/ok/en/occ/documents/og/OCC-Plan-Addressing-Orphaned-Well-Plugging-Challenges.pdf"
+      },
+      {
+        "title": "Osage Nation Continues Cleaning Up Environmental Hazards Caused by Orphaned Wells | Osage ",
+        "url": "https://www.osagenation-nsn.gov/news-events/news/osage-nation-continues-cleaning-environmental-hazards-caused-orphaned-wells"
+      },
+      {
+        "title": "Two Oklahoma tribes to receive funds for orphaned wells - ICT",
+        "url": "https://ictnews.org/news/two-oklahoma-tribes-to-receive-funds-for-orphaned-wells/"
+      },
+      {
+        "title": "Osage Nation leads effort in tackling hazardous wells with $19 million federal grant",
+        "url": "https://ktul.com/news/local/osage-nation-leads-effort-in-tackling-hazardous-wells-with-19-million-federal-grant"
+      },
+      {
+        "title": "Oklahoma could get millions in federal orphaned well plugging funds following months of wi",
+        "url": "https://www.kosu.org/energy-environment/2025-08-19/oklahoma-could-get-millions-in-federal-orphaned-well-plugging-funds-following-months-of-withholding"
+      },
+      {
+        "title": "IDLE AND ORPHAN OIL AND GAS WELLS - Oklahoma.gov",
+        "url": "https://oklahoma.gov/content/dam/ok/en/iogcc/documents/publications/prioritization_report_7.10.23.pdf"
+      },
+      {
+        "title": "Oklahoma OCC Reports 20,406 Orphaned Wells | GovPing",
+        "url": "https://changeflow.com/govping/environment/oklahoma-orphaned-well-plugging-challenges-report-2026-04-20"
+      },
+      {
+        "title": "Undocumented Orphaned Wells Research Program Division of Methane Mitigation Technologies",
+        "url": "https://www.energy.gov/node/4819110"
+      }
+    ],
+    "status": "complete"
+  },
+  "OK_Bethany_705417_1966_24000_geo_21": {
+    "narrative": "Well OK_Bethany_705417_1966_24000_geo_21 is an undocumented orphaned oil or gas well detected solely from a 1966 USGS topographic map using LBNL's deep-learning U-Net model; it carries no OCC operator record, API number, or plugging documentation in any accessible public database. Located at 35.53889\u00b0N, \u201397.62981\u00b0W in a densely populated Oklahoma County tract (~5,198 residents) within one mile of Tulakes Elementary School, it presents an elevated risk of methane leakage, groundwater contamination from degraded casings, and potential surface blowout. Immediate field verification, methane screening, and formal OCC inventory registration are required before the well can be considered for federally funded plugging under Oklahoma's pending $102 million IIJA grant program.",
+    "operator_history": "Not found on the record. No named operator, permit, or API number has been identified for this specific well in any publicly accessible OCC or federal database. The well's appearance only on the 1966 USGS Bethany quad, absent from the OCC RBDMS system, is consistent with pre-regulatory-era drilling by an unidentified independent operator whose records have not been digitized or were never filed.",
+    "bankruptcy_findings": "Not found on the record. Because no operator has been identified for this well, no corporate chain of title, bankruptcy proceeding, or shell-company transfer record can be traced from publicly available sources. A physical land-records search at the Oklahoma County Courthouse and a direct OCC Well Records inquiry (405-521-2331) would be necessary to establish any ownership history.",
+    "news_findings": "Not found on the record. No local news articles or OCC enforcement actions specifically referencing a well at coordinates 35.53889\u00b0N, \u201397.62981\u00b0W in the Bethany area of Oklahoma County were found in available public sources. Statewide, the OCC has reported at least 20,000 known orphaned well sites, and data-driven research estimates approximately 309,462 undocumented orphaned wells across Oklahoma, underscoring the scale of the problem in which this well sits.",
+    "well_id": "OK_Bethany_705417_1966_24000_geo_21",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:20:00.029963Z",
+    "sources": [
+      {
+        "title": "IDLE AND ORPHAN OIL AND GAS WELLS - Oklahoma.gov",
+        "url": "https://oklahoma.gov/content/dam/ok/en/iogcc/documents/publications/prioritization_report_7.10.23.pdf"
+      },
+      {
+        "title": "PROBLEMS AND PLANS Plugging Oklahoma\u2019s Abandoned Oil and Gas wells",
+        "url": "https://oklahoma.gov/content/dam/ok/en/occ/documents/og/OCC-Plan-Addressing-Orphaned-Well-Plugging-Challenges.pdf"
+      },
+      {
+        "title": "An Oklahoma wildlife refuge has widespread abandoned oil, gas wells. This group is cleanin",
+        "url": "https://www.kosu.org/show/stateimpact-oklahoma/2025-02-27/an-oklahoma-wildlife-refuge-has-widespread-abandoned-oil-gas-wells-this-group-is-cleaning-them-up"
+      },
+      {
+        "title": "Oklahoma could get millions to plug abandoned oil and gas wells | KOSU",
+        "url": "https://www.kosu.org/energy-environment/2025-08-19/oklahoma-could-get-millions-in-federal-orphaned-well-plugging-funds-following-months-of-withholding"
+      },
+      {
+        "title": "Oklahoma could get millions in federal orphaned well plugging funds following months of wi",
+        "url": "https://www.kgou.org/energy/2025-08-18/oklahoma-could-get-millions-in-federal-orphaned-well-plugging-funds-following-months-of-withholding"
+      },
+      {
+        "title": "Oklahoma\u2019s Federally Funded Well Plugging Program Faces Uncertain Future",
+        "url": "https://oklahoma.gov/occ/news/news-feed/2025/oklahoma-s-federally-funded-well-plugging-program-faces-uncertai.html"
+      },
+      {
+        "title": "Overcoming Oklahoma\u2019s Orphaned and Abandoned Well Problem - Oklahoma Bar Association",
+        "url": "https://www.okbar.org/barjournal/may-2024/overcoming-oklahomas-orphaned-and-abandoned-well-problem/"
+      },
+      {
+        "title": "Oklahoma OCC Reports 20,406 Orphaned Wells | GovPing",
+        "url": "https://changeflow.com/govping/environment/oklahoma-orphaned-well-plugging-challenges-report-2026-04-20"
+      }
+    ],
+    "status": "complete"
+  },
+  "CA_El Monte_290261_1948_24000_geo_0": {
+    "narrative": "Well CA_El Monte_290261_1948_24000_geo_0 is a potential undocumented orphaned well (UOW) at 34.06421\u00b0N, 118.03234\u00b0W in Los Angeles County, detected by the LBNL U-Net deep-learning model from the 1948 USGS El Monte topographic quadrangle because its symbol appears more than 100 meters from any well in California's authoritative CalGEM registry. It sits within a densely populated census tract (~5,981 residents) with 8 schools within one mile, placing it in a high-consequence exposure zone consistent with other confirmed LA urban orphaned wells known to leak methane, VOCs, and petroleum hydrocarbons into soil and groundwater. No named operator, permit record, bond, or enforcement history could be found for this specific well; it requires urgent field verification and formal referral to CalGEM's orphaned well program.",
+    "operator_history": "Not found on the record. By definition, this well was flagged because it has no match in the CalGEM/DOGGR documented-well registry (the cross-reference dataset used by the LBNL study). No driller name, operator of record, lease assignment, bond holder, or corporate successor was identified in any public database or news source searched. The well symbol on the 1948 USGS quad predates modern regulatory tracking; small independent operators active in the San Gabriel Valley in the 1930s\u20131950s frequently left no surviving paperwork.",
+    "bankruptcy_findings": "Not found on the record. No corporate entity, bankruptcy filing, or shell-company transfer could be identified because no operator is documented for this well. The general pattern in California is that pre-WWII orphaned wells were abandoned by operators who walked away without proper plugging and who could not subsequently be located for legal action, as documented in analogous CalGEM enforcement cases in Los Angeles.",
+    "news_findings": "No specific news coverage, spill report, or enforcement action was found for this exact well ID or its precise coordinates. Contextually: CalGEM ordered plugging and abandonment of 56 orphaned wells in LA County in 2020\u20132021; a 2016 action permanently sealed two LA City orphaned wells after operators could not be located; FracTracker/Earthworks field investigations confirmed undocumented wells in LA neighborhoods emit toxic VOCs at street level; and a peer-reviewed study found petroleum hydrocarbon contamination in 29% of groundwater samples near the nearby Montebello Oil Field in LA County.",
+    "well_id": "CA_El Monte_290261_1948_24000_geo_0",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:20:45.990973Z",
+    "sources": [
+      {
+        "title": "Literally Millions of Failing, Abandoned Wells - FracTracker Alliance",
+        "url": "https://www.fractracker.org/2019/03/failing-abandoned-wells/"
+      },
+      {
+        "title": "Urban Oil Afterlives: The Legacy of Idle and Orphan Wells in Los Angeles \u2013 Engagement",
+        "url": "https://aesengagement.wordpress.com/2024/06/21/urban-oil-afterlives-the-legacy-of-idle-and-orphan-wells-in-los-angeles/"
+      },
+      {
+        "title": "Mapping the risks of California\u2019s idle and orphan oil wells",
+        "url": "https://environmentamerica.org/california/resources/mapping-the-risks-of-californias-idle-and-orphan-oil-wells/"
+      },
+      {
+        "title": "State Abandonment of Orphan Wells Project - Las Cienegas",
+        "url": "https://ceqanet.lci.ca.gov/2024120428"
+      },
+      {
+        "title": "CalGEM to Oversee Plugging and Abandonment of 56 Oil and Gas Wells and Associated Faciliti",
+        "url": "https://www.conservation.ca.gov/index/Pages/News/CalGEM-Oversee-Plugging-Abandonment-56-Oil-Gas-Wells-LA-County.aspx"
+      },
+      {
+        "title": "Orphan Oil Wells in L.A. Neighborhood to be Permanently Sealed",
+        "url": "https://www.conservation.ca.gov/index/Pages/News/Orphan-Oil-Wells-in-LA-Neighborhood-to-be-Permanently-Sealed.aspx"
+      },
+      {
+        "title": "California Geologic Energy Management Division (CalGEM formerly DOGGR) |",
+        "url": "https://beniciaindependent.com/topics/california-geologic-energy-management-division-calgem/"
+      },
+      {
+        "title": "Santa Clara Avenue Oil Field",
+        "url": "https://en.wikipedia.org/wiki/Santa_Clara_Avenue_Oil_Field"
+      }
+    ],
+    "status": "complete"
+  },
+  "OK_Oklahoma City_706496_1956_24000_geo_12": {
+    "narrative": "Well ID OK_Oklahoma City_706496_1956_24000_geo_12 is an undocumented, unregistered oil or gas well detected solely via LBNL U-Net machine-learning analysis of the 1956 USGS Oklahoma City 1:24,000 topographic quadrangle, located on the northwestern margin of the historic Oklahoma City Oil Field in a populated residential area of Oklahoma County with approximately 3,457 tract residents and four schools within one mile, the nearest being Mayfield Middle School. No operator name, API number, OCC permit, or plug record has been found in any searchable state or federal database, placing this well in the category of pre-regulatory 'unknown/undocumented' sites that the OCC acknowledges represent a significant share of Oklahoma's estimated 20,000+ abandoned wells. The combination of a 70-year-old undocumented wellbore, no bonded operator of record, no plug verification, and immediate proximity to school-age children warrants urgent OCC field inspection and priority placement on Oklahoma's orphaned well plugging queue.",
+    "operator_history": "Not found on the record. No API number, permit, or operator name is associated with this well in OCC RBDMS or any publicly searchable database. The well appears on the 1956 USGS topographic quad, suggesting it was drilled during the expansion phase of the Oklahoma City Oil Field (active 1928\u20131950s), likely by one of numerous small independent operators of that era, none of whom can be specifically identified for this tract without a legal description (Section/Township/Range) and further archival research.",
+    "bankruptcy_findings": "Not found on the record. Because no operator of record exists for this well, no bankruptcy, asset transfer, or shell-company chain can be traced. The OCC's documented pattern for similar wells is that they were bought and sold among small independents and ultimately abandoned without plugging when the last owner became insolvent or simply walked away, leaving no bonded party responsible for remediation costs.",
+    "news_findings": "Not found on the record for this specific well. No local news coverage of a spill, contamination incident, or enforcement action at or near coordinates 35.49182, -97.61600 in Oklahoma County was identified in the searches conducted. Broader Oklahoma County and statewide coverage confirms Oklahoma faces a severe undocumented well crisis (OCC estimates 20,000+ abandoned wells statewide; federal USGS estimates 250,000\u2013750,000 undocumented wells nationally), and Oklahoma may receive up to $102 million in federal IIJA funding for plugging, but no story specifically naming this well or immediate vicinity was found.",
+    "well_id": "OK_Oklahoma City_706496_1956_24000_geo_12",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:21:11.463649Z",
+    "sources": [
+      {
+        "title": "OCC Plan Addressing Orphaned Well Plugging Challenges",
+        "url": "https://oklahoma.gov/content/dam/ok/en/occ/documents/og/OCC-Plan-Addressing-Orphaned-Well-Plugging-Challenges.pdf"
+      },
+      {
+        "title": "Oklahoma\u2019s Federally Funded Well Plugging Program Faces Uncertain Future",
+        "url": "https://oklahoma.gov/occ/news/news-feed/2025/oklahoma-s-federally-funded-well-plugging-program-faces-uncertai.html"
+      },
+      {
+        "title": "Oklahoma could get millions in federal orphaned well plugging funds following months of wi",
+        "url": "https://www.kosu.org/energy-environment/2025-08-19/oklahoma-could-get-millions-in-federal-orphaned-well-plugging-funds-following-months-of-withholding"
+      },
+      {
+        "title": "Overcoming Oklahoma\u2019s Orphaned and Abandoned Well Problem - Oklahoma Bar Association",
+        "url": "https://www.okbar.org/barjournal/may-2024/overcoming-oklahomas-orphaned-and-abandoned-well-problem/"
+      },
+      {
+        "title": "An Oklahoma wildlife refuge has widespread abandoned oil, gas wells. This group is cleanin",
+        "url": "https://www.kgou.org/energy/2025-02-27/an-oklahoma-wildlife-refuge-has-widespread-abandoned-oil-gas-wells-this-group-is-cleaning-them-up"
+      },
+      {
+        "title": "Oklahoma OCC Reports 20,406 Orphaned Wells | GovPing",
+        "url": "https://changeflow.com/govping/environment/oklahoma-orphaned-well-plugging-challenges-report-2026-04-20"
+      },
+      {
+        "title": "An Oklahoma wildlife refuge has widespread abandoned oil, gas wells. This group is cleanin",
+        "url": "https://www.kosu.org/show/stateimpact-oklahoma/2025-02-27/an-oklahoma-wildlife-refuge-has-widespread-abandoned-oil-gas-wells-this-group-is-cleaning-them-up"
+      },
+      {
+        "title": "What does it take to plug one of Oklahoma's thousands of abandoned oil wells? | KOSU",
+        "url": "https://www.kosu.org/local-news/2025-08-08/what-does-it-take-to-plug-one-of-oklahomas-thousands-of-abandoned-oil-wells"
+      }
+    ],
+    "status": "complete"
+  },
+  "OK_Midwest City_706371_1956_24000_geo_95": {
+    "narrative": "Well ID OK_Midwest City_706371_1956_24000_geo_95 is an undocumented orphaned oil or gas well detected by LBNL deep-learning analysis of a 1956 USGS topographic quadrangle at 35.40527\u00b0N, 97.49725\u00b0W in Oklahoma County, Oklahoma \u2014 the heart of the historic Oklahoma City Oil Field. It carries no API number, no OCC permit, and no named operator on record, meaning it was drilled outside or before formal regulatory registration and was never formally plugged. Its location in a densely populated urban tract (~3,610 residents, 8 schools within 1 mile) makes it a high-priority candidate for emergency verification and plugging, as a 70-year-old unlined well poses active risks of methane migration, groundwater contamination, and vapor intrusion near vulnerable populations.",
+    "operator_history": "Not found on the record. The well is undocumented and does not appear in the Oklahoma Corporation Commission's Well Data Finder database. No API number, permit, or chain of title exists in publicly accessible regulatory records. The 1956 detection date suggests the well was drilled by a small independent operator during Oklahoma City's secondary-recovery era (1940s\u20131950s), a period characterized by numerous short-lived entities, but no specific operator has been identified.",
+    "bankruptcy_findings": "Not found on the record. Without an API number or registered permit, no corporate entity is linked to this well, and no bankruptcy, dissolution, or shell-company transfer records have been identified. The well's undocumented status itself suggests the responsible party either never formally registered with the OCC or ceased to exist before any enforcement action could be taken.",
+    "news_findings": "No local news coverage of this specific undocumented well was found. Relevant context: Midwest City, Oklahoma County hosts the Eagle Industries EPA Superfund site (10901 SE 29th St) with documented subsurface contamination and vapor intrusion risk to nearby residences. Statewide, ProPublica and StateImpact Oklahoma have reported persistent OCC enforcement failures, with the agency not having fined any company for wastewater leaks in the last five years despite widespread groundwater contamination. The OCC's own CFO testified it would take 235 years to plug all currently identified orphaned wells at current funding rates, and federal Bipartisan Infrastructure Law plugging funds have been placed on hold.",
+    "well_id": "OK_Midwest City_706371_1956_24000_geo_95",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:21:31.234952Z",
+    "sources": [
+      {
+        "title": "Two Oklahoma tribes to receive funds for orphaned wells - ICT",
+        "url": "https://ictnews.org/news/two-oklahoma-tribes-to-receive-funds-for-orphaned-wells/"
+      },
+      {
+        "title": "An Oklahoma wildlife refuge has widespread abandoned oil, gas wells. This group is cleanin",
+        "url": "https://www.kosu.org/show/stateimpact-oklahoma/2025-02-27/an-oklahoma-wildlife-refuge-has-widespread-abandoned-oil-gas-wells-this-group-is-cleaning-them-up"
+      },
+      {
+        "title": "Overcoming Oklahoma\u2019s Orphaned and Abandoned Well Problem - Oklahoma Bar Association",
+        "url": "https://www.okbar.org/barjournal/may-2024/overcoming-oklahomas-orphaned-and-abandoned-well-problem/"
+      },
+      {
+        "title": "Oklahoma\u2019s Federally Funded Well Plugging Program Faces Uncertain Future",
+        "url": "https://oklahoma.gov/occ/news/news-feed/2025/oklahoma-s-federally-funded-well-plugging-program-faces-uncertai.html"
+      },
+      {
+        "title": "IDLE AND ORPHAN OIL AND GAS WELLS - Oklahoma.gov",
+        "url": "https://oklahoma.gov/content/dam/ok/en/iogcc/documents/publications/Orphan%20Wells%20Revised.pdf"
+      },
+      {
+        "title": "Some of Oklahoma\u2019s thousands of orphaned wells could find a new purpose | KGOU - Oklahoma'",
+        "url": "https://www.kgou.org/abandoned-oil-wells-for-geothermal"
+      },
+      {
+        "title": "Work to begin on orphan well plugging project - Okmulgee Times",
+        "url": "https://www.yourokmulgee.com/2025/03/07/work-to-begin-on-orphan-well-plugging-project/"
+      },
+      {
+        "title": "What does it take to plug one of Oklahoma's thousands of abandoned oil wells? | KOSU",
+        "url": "https://www.kosu.org/local-news/2025-08-08/what-does-it-take-to-plug-one-of-oklahomas-thousands-of-abandoned-oil-wells"
+      }
+    ],
+    "status": "complete"
+  },
+  "OK_Midwest City_706371_1956_24000_geo_98": {
+    "narrative": "A well symbol appearing on the 1956 USGS Midwest City 1:24,000 topographic quad was flagged by the LBNL U-Net deep-learning framework as an undocumented orphaned well (UOW) with no matching record in the Oklahoma Corporation Commission (OCC) database \u2014 meaning it carries no API number, no operator of record, and no plugging documentation. The site sits on the eastern margin of the Oklahoma City Oil Field within a densely residential tract of Midwest City (pop. ~3,610) and within 1 mile of 8 schools including Hayes Elementary, presenting an elevated methane migration and groundwater contamination risk. Because undocumented wells are excluded from the OCC's current IIJA-funded plugging queue by default, this well requires immediate field verification, formal OCC registration, and community-hazard prioritization before it can be remediated.",
+    "operator_history": "Not found on the record. The well is undocumented \u2014 it carries no API number and does not appear in OCC regulatory files. No operator name, permit, lease, or well name can be matched to coordinates 35.40390, -97.49964. The 1956 quad date suggests drilling in the late 1940s to mid-1950s by an unidentified small independent operator during the post-WWII Oklahoma City Oil Field expansion, but no specific attribution can be substantiated without a parcel-level mineral-lease abstract search.",
+    "bankruptcy_findings": "Not found on the record. Without an API number or operator of record, no bankruptcy proceeding, corporate dissolution, or shell-company transfer can be traced to this specific well. Historically, many Oklahoma County wells of this era were abandoned when small independent operators liquidated during the late-1950s oil price downturns, but no court or regulatory filing has been identified for this location.",
+    "news_findings": "No local news specific to this well or this coordinate was found. Regionally, Oklahoma County and Midwest City are within the documented footprint of the Oklahoma City Oil Field, and the OCC has publicly acknowledged that its tally of ~16,978\u201320,000 abandoned wells vastly undercounts actual abandonments (Carbon Tracker estimated ~288,000 in Oklahoma). Oklahoma Public Radio (KOSU/KGOU) reported in 2025 on the OCC's $102M IIJA plugging grant application and on the Well Done Foundation's plugging work, noting that wells not in OCC records \u2014 like this one \u2014 fall entirely outside existing remediation queues.",
+    "well_id": "OK_Midwest City_706371_1956_24000_geo_98",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:21:34.649950Z",
+    "sources": [
+      {
+        "title": "Oklahoma to Begin Work Plugging Nearly 1,200 Orphaned Wells Through President Biden\u2019s Bipa",
+        "url": "https://www.doi.gov/pressreleases/oklahoma-begin-work-plugging-nearly-1200-orphaned-wells-through-president-bidens"
+      },
+      {
+        "title": "Oklahoma could get millions to plug abandoned oil and gas wells | KOSU",
+        "url": "https://www.kosu.org/energy-environment/2025-08-19/oklahoma-could-get-millions-in-federal-orphaned-well-plugging-funds-following-months-of-withholding"
+      },
+      {
+        "title": "Oklahoma\u2019s Federally Funded Well Plugging Program Faces Uncertain Future",
+        "url": "https://oklahoma.gov/occ/news/news-feed/2025/oklahoma-s-federally-funded-well-plugging-program-faces-uncertai.html"
+      },
+      {
+        "title": "IDLE AND ORPHAN OIL AND GAS WELLS - Oklahoma.gov",
+        "url": "https://oklahoma.gov/content/dam/ok/en/iogcc/documents/publications/Orphan%20Wells%20Revised.pdf"
+      },
+      {
+        "title": "What does it take to plug one of Oklahoma's thousands of abandoned oil wells? | KGOU - Okl",
+        "url": "https://www.kgou.org/science-technology-and-environment/2025-08-08/what-does-it-take-to-plug-one-of-oklahomas-thousands-of-abandoned-oil-wells"
+      },
+      {
+        "title": "What does it take to plug one of Oklahoma's thousands of abandoned oil wells? | KOSU",
+        "url": "https://www.kosu.org/local-news/2025-08-08/what-does-it-take-to-plug-one-of-oklahomas-thousands-of-abandoned-oil-wells"
+      },
+      {
+        "title": "An Oklahoma wildlife refuge has widespread abandoned oil, gas wells. This group is cleanin",
+        "url": "https://www.kgou.org/energy/2025-02-27/an-oklahoma-wildlife-refuge-has-widespread-abandoned-oil-gas-wells-this-group-is-cleaning-them-up"
+      },
+      {
+        "title": "An Oklahoma wildlife refuge has widespread abandoned oil, gas wells. This group is cleanin",
+        "url": "https://www.kosu.org/show/stateimpact-oklahoma/2025-02-27/an-oklahoma-wildlife-refuge-has-widespread-abandoned-oil-gas-wells-this-group-is-cleaning-them-up"
+      }
+    ],
+    "status": "complete"
+  },
+  "OK_Midwest City_706371_1956_24000_geo_42": {
+    "narrative": "An undocumented orphaned well (ID: OK_Midwest City_706371_1956_24000_geo_42) was detected at 35.44146, -97.49714 in Midwest City, Oklahoma County via LBNL U-Net analysis of 1956 USGS topographic maps; it carries no operator of record and does not appear in Oklahoma Corporation Commission (OCC) databases, placing it entirely outside the state's 19,000+ documented orphaned-well plugging queue. The site sits within a densely populated residential tract (~3,778 people) with three schools within one mile, including Wheeler Middle School, creating an elevated public health exposure risk from potential methane venting, VOC emissions, and groundwater contamination characteristic of unplugged legacy wells. Field verification and formal submission to the OCC and the DOE undocumented orphaned well program are the immediate recommended actions.",
+    "operator_history": "Not found on the record. The well is undocumented and carries no operator of record in OCC databases. The 1956 USGS quad detection date places it in a late mid-century Oklahoma drilling era characterized by small speculative operators, many of whom abandoned wells without regulatory closure. No chain-of-title can be established without a regulatory filing to anchor the search.",
+    "bankruptcy_findings": "Not found on the record. Because the well is undocumented and has no OCC filing, no corporate entity, bankruptcy proceeding, or shell-company transfer can be identified or traced.",
+    "news_findings": "No local news articles specific to this well or parcel were found. Statewide investigative reporting (ProPublica/The Frontier, 2025) documents systemic OCC enforcement and documentation failures in Oklahoma's oil and gas division. The LBNL U-Net methodology that detected this well is documented in Environmental Science & Technology (ACS, 2024), which applied the framework to Oklahoma counties and identified 1,301 potential UOWs across the study area.",
+    "well_id": "OK_Midwest City_706371_1956_24000_geo_42",
+    "generated_by": "claude-sonnet-4-6",
+    "investigated_utc": "2026-06-20T20:22:41.909570Z",
+    "sources": [
+      {
+        "title": "Osage Nation inks deal with feds to find undocumented abandoned wells - Oklahoma Energy To",
+        "url": "https://www.okenergytoday.com/2024/10/127681/"
+      },
+      {
+        "title": "Overcoming Oklahoma\u2019s Orphaned and Abandoned Well Problem - Oklahoma Bar Association",
+        "url": "https://www.okbar.org/barjournal/may-2024/overcoming-oklahomas-orphaned-and-abandoned-well-problem/"
+      },
+      {
+        "title": "An Oklahoma wildlife refuge has widespread abandoned oil, gas wells. This group is cleanin",
+        "url": "https://www.kosu.org/show/stateimpact-oklahoma/2025-02-27/an-oklahoma-wildlife-refuge-has-widespread-abandoned-oil-gas-wells-this-group-is-cleaning-them-up"
+      },
+      {
+        "title": "IDLE AND ORPHAN OIL AND GAS WELLS - Oklahoma.gov",
+        "url": "https://oklahoma.gov/content/dam/ok/en/iogcc/documents/publications/Orphan%20Wells%20Revised.pdf"
+      },
+      {
+        "title": "What does it take to plug one of Oklahoma's thousands of abandoned oil wells? | KOSU",
+        "url": "https://www.kosu.org/local-news/2025-08-08/what-does-it-take-to-plug-one-of-oklahomas-thousands-of-abandoned-oil-wells"
+      },
+      {
+        "title": "Oklahoma OCC Reports 20,406 Orphaned Wells | GovPing",
+        "url": "https://changeflow.com/govping/environment/oklahoma-orphaned-well-plugging-challenges-report-2026-04-20"
+      },
+      {
+        "title": "catalog.energy.gov",
+        "url": "https://catalog.energy.gov/?p=16988"
+      },
+      {
+        "title": "Some of Oklahoma\u2019s thousands of orphaned wells could find a new purpose | KGOU - Oklahoma'",
+        "url": "https://www.kgou.org/abandoned-oil-wells-for-geothermal"
+      }
+    ],
+    "status": "complete"
+  }
+}

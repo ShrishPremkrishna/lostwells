@@ -44,12 +44,14 @@ export function DossierPanel({
   onClose,
   onInvestigate,
   investigating,
+  onTopoDissolve,
 }: {
   candidate: Candidate;
   dossier?: Dossier;
   onClose: () => void;
   onInvestigate?: (id: string) => void;
   investigating?: boolean;
+  onTopoDissolve?: () => void;
 }) {
   const c = candidate;
   const e = c.enrichment || {};
@@ -102,6 +104,15 @@ export function DossierPanel({
           <p className="mt-3 border-l-2 border-danger/50 pl-3 text-[13px] leading-relaxed text-ink-200">
             {c.hero.blurb}
           </p>
+        )}
+
+        {onTopoDissolve && (
+          <button
+            onClick={onTopoDissolve}
+            className="mt-3 w-full rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-[12px] font-semibold text-danger transition-colors hover:bg-danger/20"
+          >
+            ◐ Reveal {c.hero?.topo?.year ?? "historical"} topo → today
+          </button>
         )}
 
         <div className="mt-4 flex items-center gap-4">
