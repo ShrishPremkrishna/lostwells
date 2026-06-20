@@ -1,0 +1,6 @@
+# LangGraph Send map-reduce swarm. Worker nodes drive Claude via the official
+# anthropic SDK + server-side web search (langchain_anthropic's ChatAnthropic
+# hangs in some sandboxed networks; the raw SDK is the reliable path).
+langgraph>=0.2.20
+anthropic>=0.40
+pydantic>=2.5

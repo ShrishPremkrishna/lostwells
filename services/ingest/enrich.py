@@ -151,7 +151,7 @@ def _key(lat: float, lon: float) -> str:
 
 
 def run(input_file: str = "candidates.base.json", limit: int | None = None,
-        workers: int = 8) -> None:
+        workers: int = 8, output_file: str = "enrichment.json") -> None:
     records = json.loads((PROC / input_file).read_text())
     if limit:
         records = records[:limit]
@@ -178,7 +178,7 @@ def run(input_file: str = "candidates.base.json", limit: int | None = None,
         cached.update(new_rows)
 
     enrichment = {r["well_id"]: cached.get(_key(r["lat"], r["lon"]), {}) for r in records}
-    out = PROC / "enrichment.json"
+    out = PROC / output_file
     out.write_text(json.dumps(enrichment, separators=(",", ":")))
 
     with_pop = sum(1 for v in enrichment.values() if v.get("population"))
@@ -191,7 +191,8 @@ if __name__ == "__main__":
     import argparse
     p = argparse.ArgumentParser()
     p.add_argument("--input", default="candidates.base.json")
+    p.add_argument("--output", default="enrichment.json")
     p.add_argument("--limit", type=int, default=None)
     p.add_argument("--workers", type=int, default=8)
     args = p.parse_args()
-    run(args.input, args.limit, args.workers)
+    run(args.input, args.limit, args.workers, args.output)

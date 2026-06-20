@@ -57,31 +57,57 @@ def build_record(base: dict, enrich: dict | None) -> dict:
     return rec
 
 
+def _load(name: str):
+    p = PROC / name
+    return json.loads(p.read_text()) if p.exists() else None
+
+
 def main() -> None:
-    base = json.loads((PROC / "candidates.base.json").read_text())
-    epath = PROC / "enrichment.json"
-    enrich = json.loads(epath.read_text()) if epath.exists() else {}
-    if enrich:
-        print(f"[score] using enrichment for {len(enrich)} wells")
+    cand_base = json.loads((PROC / "candidates.base.json").read_text())
+    cand_enrich = _load("enrichment.json") or {}
+    if cand_enrich:
+        print(f"[score] using enrichment for {len(cand_enrich)} candidates")
     else:
         print("[score] no enrichment.json yet — exposure/equity metrics renormalized out")
 
-    records = [build_record(b, enrich.get(b["well_id"])) for b in base]
-    records = scoring.score_set(records)
-    records.sort(key=lambda r: r["score"]["composite"], reverse=True)
-    for i, r in enumerate(records, 1):
-        r["rank"] = i
+    hero_base = _load("heroes.base.json") or []
+    hero_enrich = _load("heroes.enrichment.json") or {}
+    if hero_base:
+        print(f"[score] folding in {len(hero_base)} hero wells")
 
+    cand = [build_record(b, cand_enrich.get(b["well_id"])) for b in cand_base]
+    heroes = [build_record(b, hero_enrich.get(b["well_id"])) for b in hero_base]
+
+    # Score candidates + heroes together so percentiles share one distribution.
+    combined = scoring.score_set(cand + heroes)
+    combined.sort(key=lambda r: r["score"]["composite"], reverse=True)
+    for i, r in enumerate(combined, 1):
+        r["global_rank"] = i
+
+    candidates = [r for r in combined if r.get("layer") != "hero"]
+    for i, r in enumerate(candidates, 1):
+        r["rank"] = i
     out = PROC / "candidates.scored.json"
-    out.write_text(json.dumps(records, separators=(",", ":"), default=str))
-    comps = [r["score"]["composite"] for r in records]
-    print(f"[score] {len(records)} candidates scored -> {out.relative_to(ROOT)}")
+    out.write_text(json.dumps(candidates, separators=(",", ":"), default=str))
+    comps = [r["score"]["composite"] for r in candidates]
+    print(f"[score] {len(candidates)} candidates scored -> {out.relative_to(ROOT)}")
     print(f"[score] composite min/median/max = "
           f"{min(comps):.1f} / {comps[len(comps)//2]:.1f} / {max(comps):.1f}")
     print("[score] top 3:")
-    for r in records[:3]:
+    for r in candidates[:3]:
         print(f"    #{r['rank']:>3}  {r['score']['composite']:>5.1f}  "
               f"{r['state_abbr']}/{r['county_group']}  {r['well_id']}")
+
+    hero_records = [r for r in combined if r.get("layer") == "hero"]
+    if hero_records:
+        for r in hero_records:
+            r["rank"] = r["global_rank"]
+        hp = PROC / "heroes.json"
+        hp.write_text(json.dumps(hero_records, separators=(",", ":"), default=str))
+        print(f"[score] {len(hero_records)} heroes scored -> {hp.relative_to(ROOT)}")
+        for r in hero_records:
+            print(f"    ★ {r['score']['composite']:>5.1f} (global #{r['global_rank']})  "
+                  f"{r['hero']['title']}")
 
 
 if __name__ == "__main__":
