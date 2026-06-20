@@ -1,0 +1,27 @@
+# Large/derived artifacts — never commit these (downloaded or generated).
+# NOTE: git treats trailing text after a pattern as part of the pattern, so
+# every comment here is on its own line.
+
+# HTMC GeoTIFFs (can be many GB)
+data/maps/
+# cached 184 MB HTMC inventory CSV
+data/inventory/
+# downloaded documented-well GeoJSON / shapefiles
+data/wells/
+# generated training tiles + masks
+data/patches/
+# downloaded LBNL model + reference data (unet_model.h5 ~294 MB)
+data/lbnl/
+# training / fine-tune checkpoints
+checkpoints/
+# logs, tensorboard
+runs/
+# detection GeoJSON outputs
+outputs/
+
+*.h5
+*.keras
+*.tif
+*.tiff
+__pycache__/
+*.pyc

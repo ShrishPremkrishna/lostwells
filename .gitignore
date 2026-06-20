@@ -36,6 +36,9 @@ models/
 *.h5
 *.keras
 
+# --- U-Net research scratch (agent's local download of the LBNL EDX dataset) ---
+catalog_research/
+
 # --- OS ---
 .DS_Store
 Thumbs.db
