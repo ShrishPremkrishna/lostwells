@@ -56,8 +56,8 @@ APPALACHIA = {
 
 CSV_FIELDS_WE_NEED = (
     "scan_id", "map_name", "primary_state", "date_on_map", "map_scale",
-    "grid_size", "geotiff_url", "westbc", "eastbc", "northbc", "southbc",
-    "product_filesize",
+    "grid_size", "geotiff_url", "metadata_url", "westbc", "eastbc", "northbc",
+    "southbc", "product_filesize",
 )
 
 
@@ -125,21 +125,35 @@ def write_manifest(rows: list[dict], out_dir: Path) -> Path:
     return man
 
 
+def _fetch(url: str, dest: Path, sess: requests.Session) -> None:
+    with sess.get(url, stream=True, timeout=600) as r:
+        r.raise_for_status()
+        tmp = dest.with_suffix(dest.suffix + ".part")
+        with open(tmp, "wb") as fh:
+            for chunk in r.iter_content(chunk_size=1 << 20):
+                fh.write(chunk)
+        tmp.rename(dest)
+
+
 def _download_one(row: dict, out_dir: Path, sess: requests.Session) -> tuple[str, str]:
     url = row["geotiff_url"]
     fname = url.rsplit("/", 1)[-1].replace("%20", " ")
     dest = out_dir / row["primary_state"].replace(" ", "_") / fname
     dest.parent.mkdir(parents=True, exist_ok=True)
-    if dest.exists() and dest.stat().st_size > 0:
+    # Also fetch the FGDC metadata XML sidecar (infer.py needs it for the collar
+    # crop + dates). Saved next to the GeoTIFF as <stem>.xml.
+    xml_url = row.get("metadata_url")
+    xml_dest = dest.with_suffix(".xml")
+    if dest.exists() and dest.stat().st_size > 0 and xml_dest.exists():
         return ("skip", fname)
     try:
-        with sess.get(url, stream=True, timeout=600) as r:
-            r.raise_for_status()
-            tmp = dest.with_suffix(dest.suffix + ".part")
-            with open(tmp, "wb") as fh:
-                for chunk in r.iter_content(chunk_size=1 << 20):
-                    fh.write(chunk)
-            tmp.rename(dest)
+        if not (dest.exists() and dest.stat().st_size > 0):
+            _fetch(url, dest, sess)
+        if xml_url and not xml_dest.exists():
+            try:
+                _fetch(xml_url, xml_dest, sess)
+            except Exception:  # noqa: BLE001 — XML optional; bbox also in manifest
+                pass
         return ("ok", fname)
     except Exception as e:  # noqa: BLE001
         return ("err", f"{fname}: {e}")
