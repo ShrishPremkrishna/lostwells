@@ -1,0 +1,39 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+npm-debug.log*
+.vercel/
+
+# --- Env / secrets ---
+.env
+.env.local
+.env*.local
+*.key
+
+# --- Data: commit processed datastore, ignore bulky raw + caches ---
+data/raw/
+data/cache/
+*.tif
+*.tiff
+*.zip
+*.gpkg
+# Large model weights (U-Net) are never committed
+models/
+*.h5
+*.keras
+
+# --- OS ---
+.DS_Store
+Thumbs.db

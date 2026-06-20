@@ -1,0 +1,57 @@
+{
+  "generated_utc": "2026-06-20T19:35:07.327680Z",
+  "documented_count": 117672,
+  "candidate_count": 1303,
+  "documented_by_state": {
+    "Ohio": 20557,
+    "Pennsylvania": 19160,
+    "Oklahoma": 15971,
+    "Kentucky": 12695,
+    "Illinois": 8480,
+    "New York": 7029,
+    "Texas": 5854,
+    "Kansas": 5477,
+    "Missouri": 4893,
+    "Louisiana": 4484,
+    "West Virginia": 3594,
+    "California": 3338,
+    "Wyoming": 1323,
+    "North Dakota": 953,
+    "New Mexico": 652,
+    "Indiana": 575,
+    "Tennessee": 481,
+    "Nebraska": 479,
+    "Michigan": 472,
+    "Colorado": 409,
+    "Arkansas": 349,
+    "Montana": 221,
+    "Utah": 72,
+    "Nevada": 63,
+    "Alabama": 49,
+    "Mississippi": 30,
+    "Alaska": 12
+  },
+  "candidate_by_region": {
+    "Osage_OK": 487,
+    "Kern_CA": 304,
+    "Oklahoma_OK": 275,
+    "Los Angeles_CA": 237
+  },
+  "citations": {
+    "dow": {
+      "name": "USGS Documented Unplugged Orphaned Oil and Gas Well Dataset",
+      "authors": "Merrill, M.D., Grove, C.A., Gianoutsos, N.J., and Freeman, P.A., 2023",
+      "doi": "10.3133/dr1167",
+      "data_doi": "10.5066/P91PJETI",
+      "sciencebase": "62ebd67bd34eacf539724c56",
+      "n": 117672
+    },
+    "lbnl": {
+      "name": "U-Net detected potential Undocumented Orphaned Wells (UOWs)",
+      "authors": "Ciulla, F., Santos, A.L.D., Jordan, P., Kneafsey, T., Biraud, S.C., Varadharajan, C., 2024",
+      "doi": "10.1021/acs.est.4c04413",
+      "data_doi": "10.18141/2452768",
+      "n": 1303
+    }
+  }
+}

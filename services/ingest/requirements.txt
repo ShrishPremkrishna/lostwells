@@ -1,0 +1,9 @@
+# Ingestion pipeline — pull all sources once, materialize the datastore.
+requests>=2.31
+pandas>=2.0
+numpy>=1.24
+shapely>=2.0
+pyproj>=3.5
+pyogrio>=0.7
+geopandas>=0.14
+tqdm>=4.65
