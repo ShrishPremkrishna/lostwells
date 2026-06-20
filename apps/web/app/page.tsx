@@ -238,7 +238,7 @@ export default function Page() {
       {hover && (
         <div
           className="pointer-events-none absolute z-40 -translate-x-1/2 -translate-y-[calc(100%+14px)] rounded-lg border border-white/10 bg-ink-900/95 px-3 py-2 shadow-panel"
-          style={{ left: hover.x + 380, top: hover.y }}
+          style={{ left: hover.x, top: hover.y }}
         >
           <div className="flex items-center gap-2">
             <span

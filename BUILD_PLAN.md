@@ -214,5 +214,15 @@ web-search investigation still works, and EJScreen data comes from the PEDP GitH
 - [x] Six decisions confirmed with user (table §2).
 - [x] Whitelist mechanism + audited domain list delivered; feasibility audit done.
 - [x] This handoff/plan committed.
-- [ ] **NEXT:** user whitelists domains + starts fresh session, or commits fallback files.
-- [ ] Re-verify reachability → run ingest → build per §6.
+- [x] Whitelist verified — reachability probe: ALL gov/data hosts reachable from container egress.
+- [x] Ingest: USGS DOW (117,672) + LBNL (1,303 candidates) materialized; CDC SVI + NCES enrichment cached.
+- [x] Ranking engine (methane / Raimi plug cost / carbon kicker / composite) + 11 unit tests.
+- [x] Next.js + MapLibre + deck.gl app; ranked list, dossier panel, score breakdown, flyTo, dark design system.
+- [x] LangGraph `Send` swarm run live on 12 wells (3 heroes + top 9); cached dossiers (avg 8 sources).
+- [x] Signature topo-dissolve (historical USGS topo → satellite) for the hero wells; swarm visualization.
+- [x] U-Net inference pipeline documented + runnable (services/unet/), with Kern validation instructions.
+- [x] docs/ARCHITECTURE.md + docs/DEMO_SCRIPT.md; full app committed to `main`.
+- [ ] Optional next: deploy to Vercel; run the U-Net sparse national pass on a GPU host.
+
+**Note:** built on `main` (per user direction this session), not the
+`claude/vibrant-tesla-mim5ea` branch referenced at the top of this file.
