@@ -9,19 +9,6 @@ wells under a school gym, six feet from a family's drinking water. Lost Wells
 finds candidate undocumented wells, sends a Claude agent swarm to investigate each,
 and ranks them by human impact under the finite **$4.7B** federal plugging budget.
 
-Three pillars:
-
-1. **Detection** — extends LBNL's CATALOG U-Net (Ciulla et al. 2024) that finds
-   oil/gas well symbols on historical USGS topo maps. A detection >100 m from any
-   documented well = a candidate **Undocumented Orphaned Well (UOW)**. We serve
-   LBNL's 1,301 pre-computed candidates over the 117,672-well USGS DOW backbone.
-2. **Claude agent swarm** — a LangGraph `Send` map-reduce swarm runs one Claude
-   investigator per well, using Anthropic server-side web search for open-ended
-   operator / bankruptcy / local-news investigation → a structured dossier.
-3. **Ranking + award-grade map** — a transparent composite impact score (human
-   exposure, equity, methane proxy, fundability) feeding a designed investigative
-   map with the signature 1950s-topo→satellite reveal and a live swarm view.
-
 ## Repo layout
 
 ```
@@ -56,15 +43,6 @@ python services/swarm/run_swarm.py --total 12
 cd apps/web && npm install && npm run dev   # http://localhost:3000
 ```
 
-## Honesty notes (by design)
-
-- **Methane** is a modeled EPA/Kang-factor *estimate* (grams/hour), never a
-  measurement — abandoned wells emit far below satellite detection floors.
-- **Carbon credits** rarely pay for a plug; we surface the few that can and say so.
-- **EJ** uses a SVI-derived demographic-index proxy (federal EJScreen was removed
-  Feb 2025); provenance is disclosed throughout.
-- **U-Net** detection is the LBNL pre-computed set here; the inference code is
-  real and runnable on a GPU host (`services/unet/`), validated on Kern County.
 
 See `BUILD_PLAN.md` for the full feasibility audit and `docs/ARCHITECTURE.md`
 for the system design.
