@@ -10,8 +10,16 @@ import { Legend } from "@/components/Legend";
 import { IntroOverlay } from "@/components/IntroOverlay";
 import { SwarmPanel } from "@/components/SwarmPanel";
 import { TopoDissolve } from "@/components/TopoDissolve";
-import type { Candidate, DocumentedWells, Dossier, Meta } from "@/lib/types";
-import { loadCandidates, loadDocumented, loadDossiers, loadHeroes, loadMeta } from "@/lib/data";
+import type { Candidate, CandidateLite, DocumentedWells, Dossier, Meta } from "@/lib/types";
+import {
+  loadCandidates,
+  loadDetailShard,
+  loadDocumented,
+  loadDossiers,
+  loadHeroes,
+  loadMeta,
+  shardOf,
+} from "@/lib/data";
 import { fmtInt } from "@/lib/format";
 import { scoreCSS } from "@/lib/colors";
 
@@ -21,13 +29,15 @@ type SortKey = "impact" | "population" | "schools";
 
 export default function Page() {
   const [documented, setDocumented] = useState<DocumentedWells | null>(null);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [candidates, setCandidates] = useState<CandidateLite[]>([]);
   const [heroes, setHeroes] = useState<Candidate[]>([]);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [dossiers, setDossiers] = useState<Record<string, Dossier>>({});
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [hover, setHover] = useState<{ c: Candidate; x: number; y: number } | null>(null);
+  const [detailCache, setDetailCache] = useState<Record<string, Candidate>>({});
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [hover, setHover] = useState<{ c: CandidateLite; x: number; y: number } | null>(null);
   const [showDocumented, setShowDocumented] = useState(true);
   const [region, setRegion] = useState<string>("all");
   const [query, setQuery] = useState("");
@@ -48,10 +58,17 @@ export default function Page() {
   }, []);
 
   const byId = useMemo(() => {
-    const m = new Map<string, Candidate>();
+    const m = new Map<string, CandidateLite>();
     [...heroes, ...candidates].forEach((c) => m.set(c.well_id, c));
     return m;
   }, [heroes, candidates]);
+
+  // Full hero records (already loaded in full) keyed for instant DossierPanel.
+  const heroById = useMemo(() => {
+    const m = new Map<string, Candidate>();
+    heroes.forEach((h) => m.set(h.well_id, h));
+    return m;
+  }, [heroes]);
 
   const regions = useMemo(
     () => (meta ? Object.keys(meta.candidate_by_region) : []),
@@ -85,6 +102,9 @@ export default function Page() {
   }, [candidates, heroes, region, query, sortKey]);
 
   const selected = selectedId ? byId.get(selectedId) ?? null : null;
+  const selectedDetail: Candidate | null = selectedId
+    ? heroById.get(selectedId) ?? detailCache[selectedId] ?? null
+    : null;
 
   function select(id: string) {
     const c = byId.get(id);
@@ -92,6 +112,15 @@ export default function Page() {
     setSelectedId(id);
     nonce.current += 1;
     setFocus({ lon: c.lon, lat: c.lat, zoom: c.hero ? 15 : 13.5, nonce: nonce.current });
+
+    // Heroes carry their full record already; only candidates need a shard.
+    if (heroById.has(id) || detailCache[id]) return;
+    const shard = shardOf(c.rank);
+    setDetailLoading(true);
+    loadDetailShard(shard)
+      .then((recs) => setDetailCache((prev) => ({ ...prev, ...recs })))
+      .catch(console.error)
+      .finally(() => setDetailLoading(false));
   }
 
   return (
@@ -221,12 +250,22 @@ export default function Page() {
             transition={{ type: "spring", stiffness: 180, damping: 24 }}
             className="absolute bottom-0 right-0 top-0 z-30 w-[420px] border-l border-white/[0.06] bg-ink-900/90 shadow-panel backdrop-blur-md"
           >
-            <DossierPanel
-              candidate={selected}
-              dossier={dossiers[selected.well_id]}
-              onClose={() => setSelectedId(null)}
-              onTopoDissolve={selected.hero ? () => setTopoHero(selected) : undefined}
-            />
+            {selectedDetail ? (
+              <DossierPanel
+                candidate={selectedDetail}
+                dossier={dossiers[selectedDetail.well_id]}
+                onClose={() => setSelectedId(null)}
+                onTopoDissolve={
+                  selectedDetail.hero ? () => setTopoHero(selectedDetail) : undefined
+                }
+              />
+            ) : (
+              <DossierSkeleton
+                lite={selected}
+                loading={detailLoading}
+                onClose={() => setSelectedId(null)}
+              />
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -264,10 +303,60 @@ export default function Page() {
         open={intro}
         onClose={() => setIntro(false)}
         documentedCount={meta?.documented_count ?? 117672}
-        candidateCount={meta?.candidate_count ?? 1303}
+        candidateCount={meta?.candidate_count ?? 38222}
       />
 
       {topoHero && <TopoDissolve hero={topoHero} onClose={() => setTopoHero(null)} />}
     </main>
+  );
+}
+
+// Lightweight placeholder shown while the heavy detail shard loads. Header reads
+// from the lite record so the panel feels instant; body is shimmering blocks.
+function DossierSkeleton({
+  lite,
+  loading,
+  onClose,
+}: {
+  lite: CandidateLite;
+  loading: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex items-start justify-between border-b border-white/[0.06] p-4">
+        <div className="flex items-center gap-3">
+          <span
+            className="tnum flex h-10 w-10 items-center justify-center rounded-lg text-base font-semibold text-ink-950"
+            style={{ background: scoreCSS(lite.score.composite) }}
+          >
+            {Math.round(lite.score.composite)}
+          </span>
+          <div>
+            <div className="text-sm font-medium text-ink-100">
+              {lite.hero?.title ?? lite.quad_name ?? lite.name}
+            </div>
+            <div className="text-[11px] text-ink-400">
+              {lite.hero?.place ?? lite.county_group?.replace(/_/g, " ") ?? lite.state}
+              {loading && <span className="ml-1 text-ink-500">· loading detail…</span>}
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="rounded-lg border border-white/10 px-2 py-1 text-[11px] text-ink-400 hover:text-ink-100"
+        >
+          ✕
+        </button>
+      </div>
+      <div className="flex-1 space-y-3 overflow-hidden p-4">
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className="h-20 animate-pulse rounded-xl border border-white/[0.06] bg-ink-850/60"
+          />
+        ))}
+      </div>
+    </div>
   );
 }

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -85,6 +86,85 @@ def _load(name: str):
     return json.loads(p.read_text()) if p.exists() else None
 
 
+# Lite fields the map/list/hover/search/sort/swarm components read. Everything
+# else (full score, methane, plug_cost, carbon, full enrichment, provenance) is
+# lazy-loaded per shard only when a well's DossierPanel opens.
+_SLIM_ENRICH_KEYS = (
+    "population", "schools_within_1mi", "nearest_school_m", "nearest_school", "county",
+)
+SHARD_SIZE = 1000
+
+
+def _slim_record(r: dict) -> dict:
+    e = r.get("enrichment") or {}
+    out = {
+        "well_id": r["well_id"],
+        "rank": r["rank"],
+        # 5 decimals ≈ 1.1 m precision — plenty for the map, and trims the payload.
+        "lat": round(r["lat"], 5),
+        "lon": round(r["lon"], 5),
+        "name": r.get("name"),
+        "quad_name": r.get("quad_name"),
+        "county_group": r.get("county_group"),
+        "state": r.get("state"),
+        "score": {"composite": r["score"]["composite"]},
+    }
+    # Omit null enrichment fields (and the dict entirely when empty). Most records
+    # have no nearby population/schools, so dropping their repeated null keys trims
+    # ~4 MB. All web reads are null-safe (`e.population ?? …`), so absent == null.
+    enr = {k: e[k] for k in _SLIM_ENRICH_KEYS if e.get(k) is not None}
+    if enr:
+        out["enrichment"] = enr
+    if r.get("hero"):
+        h = r["hero"]
+        out["hero"] = {
+            "title": h.get("title"),
+            "place": h.get("place"),
+            "confirmed": h.get("confirmed"),
+        }
+    return out
+
+
+def write_web_payloads(candidates: list[dict]) -> None:
+    """Emit the slim base payload + rank-bucketed detail shards for the web app."""
+    web = PROC / "candidates.web.json"
+    slim = [_slim_record(r) for r in candidates]
+    web.write_text(json.dumps(slim, separators=(",", ":"), default=str))
+    print(f"[score] slim payload {len(slim)} -> {web.relative_to(ROOT)} "
+          f"({web.stat().st_size / 1e6:.1f} MB)")
+
+    # Clear stale shards so a smaller run never leaves orphans behind.
+    detail_dir = PROC / "detail"
+    if detail_dir.exists():
+        shutil.rmtree(detail_dir)
+    detail_dir.mkdir(parents=True)
+
+    # Shards (and the web byId map) are keyed by well_id, so any duplicate ids in
+    # the upstream data collapse to one entry. Surface that rather than silently
+    # corrupting shards; the assertion is against unique ids, which is what the
+    # keyed shards can actually address.
+    unique_ids = {r["well_id"] for r in candidates}
+    n_dupe = len(candidates) - len(unique_ids)
+    if n_dupe:
+        print(f"[score] WARNING: {n_dupe} duplicate well_id(s) in candidates "
+              f"(upstream dedup issue) — they share a shard entry")
+
+    shards: dict[int, dict] = {}
+    for r in candidates:
+        shards.setdefault((r["rank"] - 1) // SHARD_SIZE, {})[r["well_id"]] = r
+
+    max_bytes = 0
+    total = 0
+    for nn, recs in sorted(shards.items()):
+        p = detail_dir / f"{nn:02d}.json"
+        p.write_text(json.dumps(recs, separators=(",", ":"), default=str))
+        max_bytes = max(max_bytes, p.stat().st_size)
+        total += len(recs)
+    assert total == len(unique_ids), f"shard total {total} != unique ids {len(unique_ids)}"
+    print(f"[score] detail shards: {len(shards)} files in {detail_dir.relative_to(ROOT)} "
+          f"(max {max_bytes / 1e6:.1f} MB, sum lens {total} == {len(unique_ids)} unique ids ✓)")
+
+
 def main() -> None:
     cand_base = json.loads((PROC / "candidates.base.json").read_text())
     cand_enrich = _load("enrichment.json") or {}
@@ -130,6 +210,8 @@ def main() -> None:
     for r in candidates[:3]:
         print(f"    #{r['rank']:>3}  {r['score']['composite']:>5.1f}  "
               f"{r['state_abbr']}/{r['county_group']}  {r['well_id']}")
+
+    write_web_payloads(candidates)
 
     hero_records = [r for r in combined if r.get("layer") == "hero"]
     if hero_records:

@@ -1,4 +1,4 @@
-import type { Candidate, DocumentedWells, Dossier, Meta } from "./types";
+import type { Candidate, CandidateLite, DocumentedWells, Dossier, Meta } from "./types";
 
 const base = (f: string) => `/data/${f}`;
 
@@ -12,7 +12,14 @@ export const loadDocumented = () =>
   getJSON<DocumentedWells>("wells.documented.json");
 
 export const loadCandidates = () =>
-  getJSON<Candidate[]>("candidates.scored.json");
+  getJSON<CandidateLite[]>("candidates.web.json");
+
+// Rank-bucketed detail shards (1000 wells/shard). Lazy-fetched + cached per shard
+// when a well's DossierPanel opens; returns { well_id: <full record> }.
+export const shardOf = (rank: number) => Math.floor((rank - 1) / 1000);
+
+export const loadDetailShard = (shard: number) =>
+  getJSON<Record<string, Candidate>>(`detail/${shard}.json`);
 
 export const loadMeta = () => getJSON<Meta>("meta.json");
 

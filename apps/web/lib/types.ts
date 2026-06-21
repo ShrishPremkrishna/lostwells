@@ -85,6 +85,29 @@ export interface Dossier {
   investigated_utc?: string;
 }
 
+// Lite subset shipped in candidates.web.json — everything the map, ranked list,
+// hover tooltip, search, sort, and SwarmPanel need. The heavy detail (full score,
+// methane, plug_cost, carbon, full enrichment) is lazy-loaded per shard for the
+// DossierPanel. `Candidate` is a structural superset, so it stays assignable here.
+export interface CandidateLite {
+  well_id: string;
+  rank: number;
+  lat: number;
+  lon: number;
+  name: string;
+  quad_name?: string;
+  county_group?: string;
+  state: string;
+  score: { composite: number };
+  // Omitted when the well has no nearby population/schools (null fields stripped
+  // from the slim payload), so optional — all reads are null-safe.
+  enrichment?: Pick<
+    Enrichment,
+    "population" | "schools_within_1mi" | "nearest_school_m" | "nearest_school" | "county"
+  >;
+  hero?: { title: string; place: string; confirmed: boolean };
+}
+
 export interface Candidate {
   well_id: string;
   layer: "candidate" | "hero";

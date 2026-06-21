@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import type { Candidate } from "@/lib/types";
+import type { CandidateLite } from "@/lib/types";
 import { scoreCSS } from "@/lib/colors";
 import { fmtInt, fmtMiles } from "@/lib/format";
 
@@ -12,7 +12,7 @@ export function RankedList({
   onSelect,
   onHover,
 }: {
-  items: Candidate[];
+  items: CandidateLite[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
