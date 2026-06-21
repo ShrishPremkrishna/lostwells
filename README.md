@@ -29,8 +29,14 @@ BUILD_PLAN.md        Session-independent build plan & decisions
 python -m venv .venv && . .venv/bin/activate
 pip install -r services/ingest/requirements.txt -r services/engine/requirements.txt
 python services/ingest/download.py          # fetch raw sources
-python services/ingest/build_datastore.py   # -> data/processed/wells.documented.json, candidates.base.json
+python services/ingest/state_registries.py --states OH,WV,PA,NY,KY   # §1.3 depth/type/status/operator
+python services/ingest/build_datastore.py --states OH,WV,PA,NY,KY    # -> wells.documented.json, candidates.base.json, lost_wells.json
 python services/ingest/enrich.py            # CDC SVI + NCES joins (cached)
+# §2A tract-dedup enrichment (drinking water, hospitals, true 1-mi population, EJ).
+# Needs CENSUS_API_KEY for ACS block-group population; --with-downloads fetches
+# the light-budget layers (PWS service areas ~570MB, hospitals, CEJST, EJI).
+export CENSUS_API_KEY=...                    # free: https://api.census.gov/data/key_signup.html
+python services/ingest/enrich_tract.py --input lost_wells.json --states OH,WV,PA,NY,KY --with-downloads
 python services/ingest/heroes.py
 python services/ingest/enrich.py --input heroes.base.json --output heroes.enrichment.json
 python services/engine/score_candidates.py  # -> candidates.scored.json, heroes.json

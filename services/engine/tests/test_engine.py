@@ -1,15 +1,18 @@
-"""Unit tests for the Lost Wells ranking engine."""
+"""Unit tests for the Lost Wells ranking engine + ingest normalizers."""
 import os
 import sys
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(_HERE))  # services/engine
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(_HERE)), "ingest"))
 
 from methane import estimate_methane, GWP100_FOSSIL, GWP20_FOSSIL  # noqa: E402
 from plugcost import estimate_plug_cost, BASE_RECLAMATION  # noqa: E402
 from carbon import carbon_kicker  # noqa: E402
 import scoring  # noqa: E402
+import normalize as N  # noqa: E402
 
 
 # --- methane --------------------------------------------------------------
@@ -118,3 +121,84 @@ def test_missing_metrics_are_renormalized_not_zeroed():
         assert r["score"]["present_metrics"] == ["methane"]
         assert set(r["score"]["missing_metrics"]) == set(scoring.DEFAULT_WEIGHTS) - {"methane"}
         assert 0 <= r["score"]["composite"] <= 100
+
+
+def test_drinking_water_and_hospitals_become_present_when_supplied():
+    # Two wells differing in drinking_water + hospitals; both should appear in
+    # present_metrics once supplied (they were renormalized out before §2A).
+    recs = [
+        _rec(id="a", population=100, drinking_water=0.9, hospitals=3, methane=8.0,
+             plug_cost=76000, program_match=1.0),
+        _rec(id="b", population=10, drinking_water=0.1, hospitals=0, methane=8.0,
+             plug_cost=76000, program_match=1.0),
+    ]
+    scoring.score_set(recs)
+    for r in recs:
+        assert "drinking_water" in r["score"]["present_metrics"]
+        assert "hospitals" in r["score"]["present_metrics"]
+
+
+# --- ingest: state-registry normalizers ----------------------------------
+def test_normalize_api_handles_dashes_and_truncation():
+    assert N.normalize_api("34-019-20162") == "3401920162"      # dashed -> 10
+    assert N.normalize_api("3401920162") == "3401920162"        # already 10
+    assert N.normalize_api("34019201620000") == "3401920162"    # API-14 -> 10
+    assert N.normalize_api("4-019-20162") == "0401920162"       # zero-padded
+    assert N.normalize_api("00-000-00000") is None              # bad state code
+    assert N.normalize_api(None) is None
+    assert N.normalize_api("n/a") is None
+
+
+def test_normalize_operator_drops_placeholders():
+    assert N.normalize_operator("  acme oil co ") == "ACME OIL CO"
+    assert N.normalize_operator("unknown") is None
+    assert N.normalize_operator("N/A") is None
+    assert N.normalize_operator("") is None
+    assert N.normalize_operator(None) is None
+
+
+def test_normalize_depth_guards_sentinels():
+    assert N.normalize_depth("4,200 ft") == 4200.0
+    assert N.normalize_depth(3150) == 3150.0
+    assert N.normalize_depth(0) is None
+    assert N.normalize_depth(-999) is None
+    assert N.normalize_depth(None) is None
+    assert N.normalize_depth("garbage") is None
+
+
+def test_state_status_vocab_extensions():
+    assert N.classify_status("DV") == N.STATUS_ABANDONED       # dry & abandoned
+    assert N.classify_status("TA") == N.STATUS_IDLE            # temp abandoned
+    assert N.classify_status("Inactive") == N.STATUS_IDLE
+    # plugged still wins ordering
+    assert N.classify_status("Plugged & Abandoned") == N.STATUS_PLUGGED
+
+
+# --- ingest: tract PIP ----------------------------------------------------
+def test_resolve_tracts_assigns_geoid_via_pip():
+    pytest.importorskip("geopandas")
+    import geopandas as gpd  # noqa: E402
+    from shapely.geometry import Polygon  # noqa: E402
+    import pandas as pd  # noqa: E402
+    import tracts as T  # noqa: E402
+
+    # One unit square tract; one point inside, one outside.
+    poly = gpd.GeoDataFrame(
+        {"GEOID": ["39000000100"]},
+        geometry=[Polygon([(0, 0), (0, 1), (1, 1), (1, 0)])],
+        crs="EPSG:4326",
+    )
+    monkey = T.load_polygons
+    T.load_polygons = lambda states, kind="tract": poly  # type: ignore
+    try:
+        wells = pd.DataFrame({
+            "well_id": ["in", "out"],
+            "lat": [0.5, 5.0], "lon": [0.5, 5.0],
+            "state_abbr": ["OH", "OH"],
+        })
+        res = T.resolve_tracts(wells, ["OH"], kind="tract")
+    finally:
+        T.load_polygons = monkey
+    got = dict(zip(res["well_id"], res["tract_geoid"]))
+    assert got["in"] == "39000000100"
+    assert got["out"] is None or pd.isna(got["out"])

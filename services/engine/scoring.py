@@ -46,12 +46,12 @@ GROUPS = {
 }
 
 METRIC_LABELS = {
-    "population": "Population nearby",
+    "population": "Population within 1 mi",
     "schools": "Schools within 1 mi",
     "hospitals": "Hospitals / sensitive sites",
-    "drinking_water": "Drinking-water proximity",
+    "drinking_water": "Drinking-water service area",
     "svi": "Social Vulnerability (SVI)",
-    "ej": "Environmental-justice burden",
+    "ej": "EJ burden (CEJST/EJI)",
     "methane": "Methane proxy (modeled)",
     "fundability_cost": "Low plug cost (tractable)",
     "program_match": "Funding-program match",

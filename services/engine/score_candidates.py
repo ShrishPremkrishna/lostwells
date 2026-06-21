@@ -44,12 +44,16 @@ def build_record(base: dict, enrich: dict | None) -> dict:
     rec["carbon"] = carbon.to_dict()
     rec["enrichment"] = e
     rec["metrics"] = {
-        "population": e.get("population"),
+        # Prefer the true 1-mile areal-interpolated population (§2A) over the
+        # tract-pop proxy; fall back to the proxy where the new layer is absent.
+        "population": e.get("population_1mi") if e.get("population_1mi") is not None
+                      else e.get("population"),
         "schools": e.get("schools_within_1mi"),
         "hospitals": e.get("hospitals_within_5mi"),
         "drinking_water": e.get("drinking_water_score"),
         "svi": e.get("svi"),
-        "ej": e.get("ej"),
+        # Real EJ signal from EJI/CEJST when present (§2A); else the SVI-derived proxy.
+        "ej": e.get("eji_rank") if e.get("eji_rank") is not None else e.get("ej"),
         "methane": methane.t_co2e_gwp100_point,
         "plug_cost": plug.point_usd,
         "program_match": scoring.program_match_score(base.get("state_abbr")),

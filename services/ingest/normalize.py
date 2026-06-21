@@ -58,10 +58,12 @@ STATUS_IDLE = "idle"
 STATUS_UNDOCUMENTED = "undocumented"  # LBNL detections — not in any registry
 STATUS_UNKNOWN = "unknown"
 
-_PLUGGED_RE = re.compile(r"plug|reclamation|^pa$", re.I)
-_ORPHAN_RE = re.compile(r"orphan|^or$|forfeit", re.I)
-_ABANDON_RE = re.compile(r"abandon|^ab$", re.I)
-_IDLE_RE = re.compile(r"idle|shut[\s-]?in|^si$|^ta$|temporarily", re.I)
+_PLUGGED_RE = re.compile(r"plug|reclamation|^pa$|^p&a$|^p & a$", re.I)
+_ORPHAN_RE = re.compile(r"orphan|^or$|forfeit|deserted", re.I)
+# ``DV`` = dry & abandoned (state code); D&A / dry hole also land here.
+_ABANDON_RE = re.compile(r"abandon|^ab$|^dv$|^d&a$|d\s*&\s*a|dry\s*hole", re.I)
+# ``TA`` = temporarily abandoned -> idle; ``SI`` shut-in; ``II`` inactive.
+_IDLE_RE = re.compile(r"idle|shut[\s-]?in|^si$|^ta$|^ii$|temporarily|inactive|suspend", re.I)
 
 
 def classify_status(raw: Optional[str]) -> str:
@@ -94,6 +96,71 @@ def is_plugged(status_norm: str) -> bool:
     the methane proxy — the conservative, source-consistent choice.
     """
     return status_norm == STATUS_PLUGGED
+
+
+# --- State-registry attribute normalizers --------------------------------
+# Placeholder operator tokens that carry no information (drop to None).
+_OPERATOR_PLACEHOLDERS = {
+    "", "UNKNOWN", "N/A", "NA", "NONE", "NULL", "TBD", "UNASSIGNED",
+    "NOT AVAILABLE", "NOT LISTED", "NOT REPORTED", "ORPHAN", "ORPHANED",
+}
+# Sentinel numeric depths used by several state registries to mean "no value".
+_DEPTH_SENTINELS = {0.0, -1.0, -999.0, -9999.0, 99999.0, 999999.0}
+_NONDIGIT_RE = re.compile(r"\D+")
+
+
+def normalize_api(raw) -> Optional[str]:
+    """Canonicalize a well API number to its 10-digit (state+county+well) form.
+
+    Handles dashed ``SS-CCC-SSSSS`` and undashed inputs alike, strips any
+    directional/event suffix (API-14 -> API-10), and rejects strings without a
+    plausible state+county+well core. Returns ``None`` for missing/garbage.
+    """
+    if raw is None or (isinstance(raw, float) and math.isnan(raw)):
+        return None
+    digits = _NONDIGIT_RE.sub("", str(raw))
+    if not digits:
+        return None
+    # API-14 carries directional sidetrack/event codes after the 10-digit core;
+    # truncate to the canonical 10. Shorter strings are left-padded only when a
+    # leading state-code zero was plausibly dropped (<=9 digits).
+    if len(digits) >= 14:
+        digits = digits[:10]
+    elif len(digits) > 10:
+        digits = digits[:10]
+    elif len(digits) < 10:
+        digits = digits.zfill(10)
+    # A valid API-10 has a nonzero 2-digit state code.
+    if digits[:2] == "00":
+        return None
+    return digits
+
+
+def normalize_operator(raw) -> Optional[str]:
+    """Trim/upper-case an operator name; drop placeholder/empty tokens."""
+    if raw is None or (isinstance(raw, float) and math.isnan(raw)):
+        return None
+    s = " ".join(str(raw).strip().upper().split())
+    if not s or s in _OPERATOR_PLACEHOLDERS:
+        return None
+    return s
+
+
+def normalize_depth(raw) -> Optional[float]:
+    """Coerce a total-depth value to numeric feet; guard 0/null/sentinels."""
+    if raw is None or (isinstance(raw, float) and math.isnan(raw)):
+        return None
+    try:
+        # tolerate strings like "4,200 ft" / "4200.0"
+        s = str(raw).strip().lower().replace(",", "").replace("ft", "").strip()
+        if not s:
+            return None
+        val = float(s)
+    except (ValueError, TypeError):
+        return None
+    if val <= 0 or val in _DEPTH_SENTINELS:
+        return None
+    return round(val, 1)
 
 
 # --- LBNL candidate id provenance ----------------------------------------
