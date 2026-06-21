@@ -20,17 +20,30 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # services/
+from dotenv_min import load_root_env  # noqa: E402
+
+load_root_env()  # pick up ANTHROPIC_API_KEY from <repo-root>/.env if present
 from graph import build_graph  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 PROC = ROOT / "data" / "processed"
 
 
+APPALACHIA = {"OH", "PA", "WV", "KY"}
+
+
 def load_cohort(total: int) -> list[dict]:
+    """Heroes + top Appalachia candidates. (Global rank puts CA/OK first, which is
+    the validation layer — the swarm investigates the discovery set.)"""
     heroes = json.loads((PROC / "heroes.json").read_text()) if (PROC / "heroes.json").exists() else []
+    hero_ids = {h.get("well_id") for h in heroes}
     candidates = json.loads((PROC / "candidates.scored.json").read_text())
+    app = [c for c in candidates
+           if c.get("state_abbr") in APPALACHIA and c.get("well_id") not in hero_ids]
+    app.sort(key=lambda c: c.get("rank") if c.get("rank") is not None else 10**9)
     n_cand = max(0, total - len(heroes))
-    return heroes + candidates[:n_cand]
+    return heroes + app[:n_cand]
 
 
 def main() -> None:

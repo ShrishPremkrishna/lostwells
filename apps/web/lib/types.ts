@@ -39,6 +39,8 @@ export interface Carbon {
   value_high_usd: number;
   self_funding_ratio_point: number;
   pencils_out: boolean;
+  tier?: string;
+  carbon_viable?: boolean;
   buffer_pool: number;
   crediting_period_years: number;
   label: string;
@@ -46,15 +48,19 @@ export interface Carbon {
 
 export interface Enrichment {
   population?: number | null;
+  population_1mi?: number | null;
   daytime_population?: number | null;
   svi?: number | null;
   poverty_pct?: number | null;
   minority_pct?: number | null;
   ej?: number | null;
+  eji_rank?: number | null;
+  cejst_disadvantaged?: boolean | null;
   svi_socioeconomic?: number | null;
   svi_minority?: number | null;
   county?: string | null;
   tract_fips?: string | null;
+  tract_geoid?: string | null;
   schools_within_1mi?: number | null;
   nearest_school?: string | null;
   nearest_school_m?: number | null;
@@ -98,12 +104,18 @@ export interface CandidateLite {
   quad_name?: string;
   county_group?: string;
   state: string;
+  source?: "lbnl" | "unet_2026";
   score: { composite: number };
   // Omitted when the well has no nearby population/schools (null fields stripped
   // from the slim payload), so optional — all reads are null-safe.
   enrichment?: Pick<
     Enrichment,
-    "population" | "schools_within_1mi" | "nearest_school_m" | "nearest_school" | "county"
+    | "population"
+    | "population_1mi"
+    | "schools_within_1mi"
+    | "nearest_school_m"
+    | "nearest_school"
+    | "county"
   >;
   hero?: { title: string; place: string; confirmed: boolean };
 }
@@ -143,6 +155,7 @@ export interface HeroMeta {
   place: string;
   blurb: string;
   confirmed: boolean;
+  pathway?: string;
   topo?: { year: string; label: string };
   citations?: { title: string; url: string }[];
 }
@@ -159,6 +172,92 @@ export interface DocumentedWells {
   status_idx: number[];
 }
 
+export interface Discovery {
+  definition: string;
+  total_candidates: number;
+  gt_100m: number;
+  gt_500m: number;
+  gt_1000m: number;
+  median_nearest_documented_m: number;
+  max_nearest_documented_m: number;
+  by_source: Record<string, { candidates: number; gt_100m: number }>;
+}
+
+export interface Pathway {
+  key: string;
+  label: string;
+  eligible: boolean;
+  rationale: string;
+  timeline: string;
+  actor: string;
+  confidence: string;
+  priority: number;
+}
+
+export interface Actor {
+  name?: string;
+  party?: string | null;
+  phone?: string | null;
+  url?: string | null;
+  email?: string | null;
+  type?: string;
+  chamber?: string;
+  district?: string;
+}
+
+export interface Regulator {
+  agency?: string;
+  division?: string;
+  program?: string;
+  url?: string;
+  phone?: string | null;
+  email?: string | null;
+}
+
+export interface KnowledgeEntry {
+  key: string;
+  topic: string;
+  value: string;
+  source: string;
+  well_id?: string | null;
+}
+
+export interface SurfaceOwner {
+  owner?: string | null;
+  owner_address?: string | null;
+  physical_address?: string | null;
+  acres?: number | null;
+  parcel_id?: string | null;
+  legal?: string | null;
+  source_url?: string | null;
+  state?: string | null;
+  note?: string | null;
+}
+
+export interface CaseFile {
+  well_id: string;
+  rank: number;
+  name?: string;
+  state?: string;
+  county?: string;
+  evidence: Record<string, number | string | boolean | null>;
+  pathways: Pathway[];
+  actors: {
+    responsible_regulator?: Regulator | null;
+    can_fund?: Regulator | null;
+    surface_owner?: SurfaceOwner | null;
+    can_pressure: {
+      us_senators: Actor[];
+      us_representative: Actor | null;
+      state_legislators: Actor[];
+      ej_orgs: { org: string; scope: string; focus: string; url: string }[];
+    };
+    districts?: Record<string, string | null> | null;
+    available: { federal: boolean; state_legislators: boolean; regulator: boolean };
+  };
+  story: { text: string; generated_by: string } | null;
+}
+
 export interface Meta {
   generated_utc: string;
   documented_count: number;
@@ -166,6 +265,7 @@ export interface Meta {
   documented_by_state: Record<string, number>;
   candidate_by_region: Record<string, number>;
   citations: Record<string, Record<string, unknown>>;
+  discovery?: Discovery;
 }
 
 export const METRIC_LABELS: Record<string, string> = {

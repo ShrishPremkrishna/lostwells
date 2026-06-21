@@ -1,62 +1,51 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Restrained environmental-investigation palette (spec §5.3):
- * near-black "ink" base, ONE urgent ember accent for high-impact wells, a cool
- * teal for documented wells, and danger red reserved for confirmed exposure.
+ * uidesign.md §2 — "topographic field survey meets intelligence dashboard."
+ * Light shell, muted olive-to-forest green accent (never neon), grays derived
+ * from #CFCFCF. Zero border-radius everywhere except pills (full) and badges (sm).
  */
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        ink: {
-          950: "#06080b",
-          900: "#0a0d12",
-          850: "#0f131a",
-          800: "#141922",
-          700: "#1d2430",
-          600: "#2a3340",
-          500: "#3b4654",
-          400: "#5a6675",
-          300: "#8b97a6",
-          200: "#b9c2cd",
+        base: "#CFCFCF", // borders, dividers, inactive UI
+        surface: {
+          1: "#F5F5F5", // app shell background
+          2: "#E8E8E8", // card / panel backgrounds
+          3: "#CFCFCF", // input borders, subtle strokes
         },
-        ember: {
-          DEFAULT: "#ff7a18",
-          soft: "#f5a623",
-          deep: "#c2410c",
+        mid: "#A8A8A8", // secondary text, placeholders, disabled
+        body: "#3D3D3D", // primary body text
+        head: "#1A1A1A", // headlines, high-emphasis
+        ink: "#0D0D0D", // near-black (map overlays at 85%)
+        accent: {
+          light: "#D4E8DA", // selected-row wash
+          soft: "#7AAE8A", // tags, badges, secondary
+          DEFAULT: "#4A7C59", // primary accent — buttons, pins, active
+          deep: "#2E5C3E", // hover / pressed
+          ink: "#1A3D29", // text on light-green
         },
-        teal: {
-          DEFAULT: "#2dd4bf",
-          deep: "#0f766e",
-        },
-        danger: "#ef4444",
-        paper: "#f4f1ea",
+        danger: "#8B3A3A", // high-risk wells, errors
+        warning: "#8B6914", // medium risk
+        success: "#2E5C3E",
+        info: "#3A5F8B",
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
-      fontFeatureSettings: {
-        nums: '"tnum" 1',
+      borderRadius: {
+        none: "0",
+        DEFAULT: "0", // zero-radius is the rule (uidesign.md §6)
+        sm: "4px", // badges only
+        full: "9999px", // pills only
       },
       boxShadow: {
-        panel: "0 24px 64px -24px rgba(0,0,0,0.8)",
-        glow: "0 0 24px -4px rgba(255,122,24,0.5)",
-      },
-      keyframes: {
-        pulsering: {
-          "0%": { transform: "scale(0.6)", opacity: "0.7" },
-          "100%": { transform: "scale(2.4)", opacity: "0" },
-        },
-        shimmer: {
-          "100%": { transform: "translateX(100%)" },
-        },
-      },
-      animation: {
-        pulsering: "pulsering 2s ease-out infinite",
-        shimmer: "shimmer 1.5s infinite",
+        // The ONLY shadow in the UI: dossier panel left edge (uidesign.md §6).
+        panel: "-4px 0 24px rgba(0,0,0,0.12)",
       },
     },
   },

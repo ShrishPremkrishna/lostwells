@@ -1,0 +1,212 @@
+[
+ {
+  "key": "865d18829efe",
+  "topic": "state_program",
+  "value": "Ohio: Ohio Department of Natural Resources (ODNR) — Orphan Well Program (BIL/IIJA-funded)",
+  "source": "state_regulators.csv",
+  "well_id": null
+ },
+ {
+  "key": "4fd77eed2d46",
+  "topic": "state_program",
+  "value": "Pennsylvania: Pennsylvania Department of Environmental Protection (PA DEP) — Orphan and Abandoned Well Plugging Program (BIL/IIJA-funded)",
+  "source": "state_regulators.csv",
+  "well_id": null
+ },
+ {
+  "key": "fee5a6831e90",
+  "topic": "state_program",
+  "value": "West Virginia: West Virginia Department of Environmental Protection (WVDEP) — Abandoned Well Program (BIL/IIJA-funded)",
+  "source": "state_regulators.csv",
+  "well_id": null
+ },
+ {
+  "key": "986bc915396e",
+  "topic": "state_program",
+  "value": "Kentucky: Kentucky Energy and Environment Cabinet — Kentucky Abandoned/Orphan Well Plugging Program (BIL/IIJA-funded)",
+  "source": "state_regulators.csv",
+  "well_id": null
+ },
+ {
+  "key": "b0ed1bb20cc1",
+  "topic": "funder",
+  "value": "Orphan Well Cooperative — nonprofit hub with explicit report-orphan-well field + public prioritization matrix",
+  "source": "intake_adapters.csv",
+  "well_id": null
+ },
+ {
+  "key": "b6435d785bc6",
+  "topic": "funder",
+  "value": "Well Done Foundation — adopt-a-well + carbon; ~$65k/well; methane-first selection",
+  "source": "intake_adapters.csv",
+  "well_id": null
+ },
+ {
+  "key": "75e32ebe633b",
+  "topic": "funder",
+  "value": "Rebellion Energy — for-profit carbon, OK-centric, high-emission wells",
+  "source": "intake_adapters.csv",
+  "well_id": null
+ },
+ {
+  "key": "ccc19f5dc982",
+  "topic": "funder",
+  "value": "Zefiro Methane — acquires via state RFP bids only",
+  "source": "intake_adapters.csv",
+  "well_id": null
+ },
+ {
+  "key": "ea6331636358",
+  "topic": "funder",
+  "value": "EDF — not a plugger - bulk data source (120k-well dataset)",
+  "source": "intake_adapters.csv",
+  "well_id": null
+ },
+ {
+  "key": "20ef8f50d98f",
+  "topic": "carbon_program",
+  "value": "ACR Orphaned Well Methodology (2023): plugging a high-emitter can mint carbon credits — Zefiro ACR959 = 92,956 t CO₂e from ONE well (sold to Mercuria, 2025).",
+  "source": "Zefiro/ACR 2025",
+  "well_id": null
+ },
+ {
+  "key": "2c9afe080b62",
+  "topic": "parcel_lookup",
+  "value": "WV/OH/KY parcels are free via ArcGIS REST point-in-polygon (no key); WV uses WV_Parcels FullOwnerName. PA needs a county service or national-API trial.",
+  "source": "STRUCTURED_PROPERTY_INFORMATION.md",
+  "well_id": null
+ },
+ {
+  "key": "bde4618e37ba",
+  "topic": "funding",
+  "value": "Federal BIL/IIJA orphan-well fund is $4.7B; Justice40 prioritizes disadvantaged (CEJST) communities for set-asides.",
+  "source": "BIL/Justice40",
+  "well_id": null
+ },
+ {
+  "key": "3384a1183731",
+  "topic": "operator",
+  "value": "unet_OH_Cincinnati-West_1961_24000_geo_15: No operator name, permit number, API well number, or lease record has been located in any authoritative source — ODNR RBDMS, the ODNR GIS Oil & Gas Well Viewer, Hamilton County rec",
+  "source": "swarm dossier",
+  "well_id": "unet_OH_Cincinnati-West_1961_24000_geo_15"
+ },
+ {
+  "key": "4b7583ebd325",
+  "topic": "operator",
+  "value": "unet_WV_Parkersburg_1969_24000_geo_38: No operator identified. The WVDEP TAGIS system (tagis.dep.wv.gov/oog/) returned no well record for the coordinates 39.28136, -81.55676 or any nearby Wood County permit matching thi",
+  "source": "swarm dossier",
+  "well_id": "unet_WV_Parkersburg_1969_24000_geo_38"
+ },
+ {
+  "key": "effd50866341",
+  "topic": "operator",
+  "value": "unet_OH_Toledo_1965_24000_geo_5: No operator identified on the record. The Ohio Division of Oil and Gas was not created until 1965, and wells drilled prior to that date were regulated (if at all) by the Ohio Depar",
+  "source": "swarm dossier",
+  "well_id": "unet_OH_Toledo_1965_24000_geo_5"
+ },
+ {
+  "key": "ad96a3852605",
+  "topic": "operator",
+  "value": "unet_OH_East-Cleveland_1963_24000_geo_3: No named operator found on the record. The well's location falls within the historic Cleveland Gas Field (Cuyahoga County), where commercial gas exploitation began around 1912 and",
+  "source": "swarm dossier",
+  "well_id": "unet_OH_East-Cleveland_1963_24000_geo_3"
+ },
+ {
+  "key": "cbe3bd41d7ca",
+  "topic": "operator",
+  "value": "unet_OH_Canton-East_1967_24000_geo_2: No operator name, permit number, or API well number has been located in any authoritative database for this well. The ODNR DOGRM RBDMS well-information portal returned no record ma",
+  "source": "swarm dossier",
+  "well_id": "unet_OH_Canton-East_1967_24000_geo_2"
+ },
+ {
+  "key": "ed557ca46223",
+  "topic": "operator",
+  "value": "unet_OH_Cincinnati-West_1961_24000_geo_16: No API well number was returned by the ODNR RBDMS database, the ODNR/ArcGIS statewide oil-and-gas well-locations layer, or the NETL EDX Ohio well locator for the coordinates 39.130",
+  "source": "swarm dossier",
+  "well_id": "unet_OH_Cincinnati-West_1961_24000_geo_16"
+ },
+ {
+  "key": "733265eef29d",
+  "topic": "operator",
+  "value": "unet_KY_Covington_1981_24000_geo_1: No operator, permit number, or API well number was located in the KGS KY Geode oil and gas wells database, the KDOG permit or abandoned-well spreadsheets, or any open-record search",
+  "source": "swarm dossier",
+  "well_id": "unet_KY_Covington_1981_24000_geo_1"
+ },
+ {
+  "key": "06d8e58f78fe",
+  "topic": "operator",
+  "value": "unet_PA_Steelton_1963_24000_geo_0: No named operator is found on the record for this specific well. The broader industrial context is significant: the Steelton Borough footprint has been dominated since 1866 by the",
+  "source": "swarm dossier",
+  "well_id": "unet_PA_Steelton_1963_24000_geo_0"
+ },
+ {
+  "key": "b69c60b7fb03",
+  "topic": "operator",
+  "value": "unet_KY_Bowling-Green-North_1968_24000_geo_45: No named operator, API number, permit, or well record has been matched to coordinates 37.00349, -86.46077 in any available authoritative database (KGS KY Geode oil and gas well sea",
+  "source": "swarm dossier",
+  "well_id": "unet_KY_Bowling-Green-North_1968_24000_geo_45"
+ },
+ {
+  "key": "eeb77e69e18a",
+  "topic": "operator",
+  "value": "unet_OH_Cincinnati-East_1961_24000_geo_2: No API number, permit, completion record, or named operator has been identified for this well in the Ohio ODNR RBDMS database, the ODNR Well Locator GIS layer, the ArcGIS Hub state",
+  "source": "swarm dossier",
+  "well_id": "unet_OH_Cincinnati-East_1961_24000_geo_2"
+ },
+ {
+  "key": "375ead249bc1",
+  "topic": "operator",
+  "value": "unet_KY_Bowling-Green-North_1968_24000_geo_44: No operator name, API number, permit number, lease name, or well record was found in the KGS KY Geode Oil and Gas Wells Search, the Kentucky Division of Oil and Gas permit or aband",
+  "source": "swarm dossier",
+  "well_id": "unet_KY_Bowling-Green-North_1968_24000_geo_44"
+ },
+ {
+  "key": "7c7c05bd243d",
+  "topic": "operator",
+  "value": "unet_PA_Pittsburgh-East_1960_24000_geo_5: No operator name, API well number, permit number, or lease record was located in the PA DEP Oil and Gas Mapping System, the Pennsylvania Geological Survey EDWIN database (180,000+",
+  "source": "swarm dossier",
+  "well_id": "unet_PA_Pittsburgh-East_1960_24000_geo_5"
+ },
+ {
+  "key": "69b8dcf90dc6",
+  "topic": "operator",
+  "value": "unet_WV_Parkersburg_1969_24000_geo_39: No operator identified on the record. The WVDEP TAGIS interactive well registry, queried directly at coordinates 39.28078 / -81.55665 (Wood County), returned no matching permit or",
+  "source": "swarm dossier",
+  "well_id": "unet_WV_Parkersburg_1969_24000_geo_39"
+ },
+ {
+  "key": "4c1fed1a1df3",
+  "topic": "operator",
+  "value": "unet_OH_Cleveland-North_1963_24000_geo_0: No operator name, permit number, or API number is recoverable from any authoritative source for this well. The ODNR RBDMS well database — the primary state registry — returned no r",
+  "source": "swarm dossier",
+  "well_id": "unet_OH_Cleveland-North_1963_24000_geo_0"
+ },
+ {
+  "key": "80be459c6051",
+  "topic": "operator",
+  "value": "unet_OH_Cleveland-South_1963_24000_geo_1: No operator name, permit number, or API well number found on the record for this specific coordinate. The Ohio ODNR RBDMS database (the authoritative state registry) returned no re",
+  "source": "swarm dossier",
+  "well_id": "unet_OH_Cleveland-South_1963_24000_geo_1"
+ },
+ {
+  "key": "f73af09c254a",
+  "topic": "operator",
+  "value": "unet_PA_Mc-Keesport_1960_24000_geo_0: No named operator found on the record for this specific well. The broader McKeesport quadrangle (southeastern Allegheny County) was drilled extensively by the Philadelphia Company,",
+  "source": "swarm dossier",
+  "well_id": "unet_PA_Mc-Keesport_1960_24000_geo_0"
+ },
+ {
+  "key": "952cf70c1031",
+  "topic": "operator",
+  "value": "unet_KY_Bowling-Green-South_1968_24000_geo_7: No operator name, API number, or permit record was returned from the Kentucky Geological Survey KY Geode Oil and Gas Wells Search or the KY Division of Oil and Gas databases for th",
+  "source": "swarm dossier",
+  "well_id": "unet_KY_Bowling-Green-South_1968_24000_geo_7"
+ },
+ {
+  "key": "82ed6c1d69fd",
+  "topic": "operator",
+  "value": "unet_KY_Bowling-Green-South_1968_24000_geo_9: No operator name, farm name, lease name, or API well number was located in the KGS KYGeode database for this coordinate set or the Bowling Green South quadrangle. The well type is",
+  "source": "swarm dossier",
+  "well_id": "unet_KY_Bowling-Green-South_1968_24000_geo_9"
+ }
+]

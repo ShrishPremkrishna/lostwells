@@ -1,15 +1,14 @@
-// Sequential impact ramp: deep teal-grey (low) -> amber -> ember -> danger red.
-// One restrained accent system so the data, not the chrome, carries meaning.
+// Impact ramp (uidesign.md aesthetic): muted sage (low) -> olive -> forest ->
+// danger red (highest human impact). Readable on the light field-survey shell.
 
 type RGB = [number, number, number];
 
 const STOPS: [number, RGB][] = [
-  [0, [45, 90, 100]],
-  [40, [70, 130, 128]],
-  [55, [245, 166, 35]],
-  [70, [255, 122, 24]],
-  [85, [216, 64, 32]],
-  [100, [239, 68, 68]],
+  [0, [193, 205, 193]], // low — muted sage grey
+  [45, [122, 174, 138]], // accent-soft
+  [70, [74, 124, 89]], // accent
+  [85, [46, 92, 62]], // accent-deep
+  [100, [139, 58, 58]], // danger — highest impact
 ];
 
 function lerp(a: number, b: number, t: number) {
@@ -38,14 +37,18 @@ export const scoreCSS = (score: number, alpha = 1) => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-// Documented backbone: dim teal; candidates colored by score; heroes ember-red.
-export const TEAL: RGB = [45, 212, 191];
-export const EMBER: RGB = [255, 122, 24];
-export const DANGER: RGB = [239, 68, 68];
+// Map marker colors. Names kept (TEAL/EMBER/DANGER) so existing imports work;
+// values are the new light-theme palette.
+export const TEAL: RGB = [110, 124, 140]; // documented backbone — muted slate
+export const EMBER: RGB = [74, 124, 89]; // discovered wells — olive-green accent
+export const DANGER: RGB = [139, 58, 58]; // hero wells — danger red
+
+// Clearer aliases for new code.
+export const DOCUMENTED = TEAL;
+export const DISCOVERED = EMBER;
+export const HERO = DANGER;
 
 export const GROUP_COLORS: Record<string, string> = {
-  human_exposure: "#ff7a18",
-  equity: "#f5a623",
-  methane: "#9ca3af",
-  fundability: "#2dd4bf",
+  human_exposure: "#4a7c59",
+  equity: "#7aae8a",
 };

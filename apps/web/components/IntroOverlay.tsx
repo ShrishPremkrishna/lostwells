@@ -2,18 +2,21 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { fmtInt } from "@/lib/format";
+import type { Meta } from "@/lib/types";
 
 export function IntroOverlay({
   open,
   onClose,
-  documentedCount,
-  candidateCount,
+  meta,
 }: {
   open: boolean;
   onClose: () => void;
-  documentedCount: number;
-  candidateCount: number;
+  meta: Meta | null;
 }) {
+  const unet = meta?.discovery?.by_source?.unet_appalachia?.candidates ?? 36919;
+  const offRecord = meta?.discovery?.gt_100m ?? 38095;
+  const documented = meta?.documented_count ?? 117672;
+
   return (
     <AnimatePresence>
       {open && (
@@ -21,40 +24,43 @@ export function IntroOverlay({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 z-40 flex items-center justify-center bg-ink-950/80 backdrop-blur-sm"
+          className="absolute inset-0 z-40 flex items-center justify-center p-4"
+          style={{ background: "rgba(13,13,13,0.55)" }}
         >
           <motion.div
-            initial={{ y: 24, opacity: 0 }}
+            initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 12, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 120, damping: 18 }}
-            className="mx-4 max-w-2xl rounded-2xl border border-white/10 bg-ink-900/95 p-8 shadow-panel"
+            exit={{ y: 8, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 140, damping: 20 }}
+            className="max-w-2xl border p-8"
+            style={{ background: "var(--color-surface-1)", borderColor: "var(--color-base)" }}
           >
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ember-soft">
-              An investigative map
+            <div className="text-[11px] uppercase tracking-[0.2em]" style={{ color: "var(--color-accent)" }}>
+              An investigative field survey
             </div>
-            <h1 className="font-display mt-2 text-4xl leading-[1.05] text-paper">
-              17.6 million Americans live within a mile of an oil or gas well.
+            <h1 className="mt-2 font-display text-4xl leading-[1.08]" style={{ color: "var(--color-text-head)" }}>
+              We found {fmtInt(unet)} oil &amp; gas wells nobody had on record.
             </h1>
-            <p className="mt-4 text-[15px] leading-relaxed text-ink-200">
-              For <span className="text-paper">undocumented orphaned wells</span>, that exposure is
-              literally uncounted — wells under a school gym, six feet from a family&apos;s drinking
-              water. We extend LBNL&apos;s U-Net detector across historical USGS topo maps, layer{" "}
-              <span className="tnum text-paper">{fmtInt(candidateCount)}</span> candidate
-              undocumented wells over{" "}
-              <span className="tnum text-paper">{fmtInt(documentedCount)}</span> documented ones,
-              send a Claude agent swarm to investigate each, and rank them by human impact under the
-              finite <span className="text-paper">$4.7B</span> federal plugging budget.
+            <p className="mt-4 text-[15px] leading-relaxed" style={{ color: "var(--color-text-body)" }}>
+              About <strong>80%</strong> of America&apos;s undocumented orphaned wells are
+              in Appalachia — so we ran a U-Net over historical USGS topographic maps and,
+              in a single overnight run across four states, surfaced{" "}
+              <span className="tnum" style={{ color: "var(--color-text-head)" }}>{fmtInt(unet)}</span>{" "}
+              candidate wells. <span className="tnum" style={{ color: "var(--color-text-head)" }}>{fmtInt(offRecord)}</span>{" "}
+              sit more than 100&nbsp;m from any of the {fmtInt(documented)} documented wells —
+              genuinely off the record. We rank them by who lives on top of them, and map a
+              path to plug them.
             </p>
-            <div className="mt-6 flex items-center gap-3">
+            <div className="mt-6 flex items-center gap-4">
               <button
                 onClick={onClose}
-                className="rounded-lg bg-ember px-5 py-2.5 text-sm font-semibold text-ink-950 shadow-glow transition-transform hover:scale-[1.02]"
+                className="px-5 py-2.5 text-[13px] font-semibold uppercase tracking-[0.06em] text-white transition-colors"
+                style={{ background: "var(--color-accent)" }}
               >
                 Explore the map →
               </button>
-              <span className="text-[11px] text-ink-500">
-                Methane figures are modeled estimates. Data sources disclosed throughout.
+              <span className="text-[11px]" style={{ color: "var(--color-mid)" }}>
+                Detections are candidates, not confirmed wells. Methane is a modeled estimate.
               </span>
             </div>
           </motion.div>

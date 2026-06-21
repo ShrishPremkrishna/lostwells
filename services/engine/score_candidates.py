@@ -53,14 +53,23 @@ def build_record(base: dict, enrich: dict | None, se: dict | None = None) -> dic
         depth_ft=base.get("depth_ft"),
         state_cost_index=STATE_COST_INDEX.get(base.get("state_abbr"), 1.0),
     )
-    carbon = carbon_kicker(methane.t_co2e_gwp100_point, plug.point_usd)
+    carbon = carbon_kicker(
+        # super-emitters: value the right-tail anchor so the pathway reflects the
+        # ACR959-class economics rather than the collapsed mean.
+        methane.t_co2e_gwp100_high if methane.super_emitter else methane.t_co2e_gwp100_point,
+        plug.point_usd,
+        super_emitter=bool(methane.super_emitter),
+    )
 
     e = enrich or {}
     rec = dict(base)
-    rec["methane"] = methane.to_dict()
-    rec["plug_cost"] = plug.to_dict()
-    rec["carbon"] = carbon.to_dict()
-    rec["enrichment"] = e
+    rec["methane"] = methane.to_dict()    # computed for display context, not scored
+    rec["plug_cost"] = plug.to_dict()     # computed for display context, not scored
+    rec["carbon"] = carbon.to_dict()      # tier/pathway (§3.6), not scored
+    # Drop the legacy redundant tract_fips (kept tract_geoid); §2.8 cleanup.
+    rec["enrichment"] = {k: v for k, v in e.items() if k != "tract_fips"}
+    # Only the 6 ranking metrics — methane/plug_cost/program_match are no longer
+    # ranking signal (they were near-constant region-proxies; see scoring.py).
     rec["metrics"] = {
         # Prefer the true 1-mile areal-interpolated population (§2A) over the
         # tract-pop proxy; fall back to the proxy where the new layer is absent.
@@ -72,12 +81,6 @@ def build_record(base: dict, enrich: dict | None, se: dict | None = None) -> dic
         "svi": e.get("svi"),
         # Real EJ signal from EJI/CEJST when present (§2A); else the SVI-derived proxy.
         "ej": e.get("eji_rank") if e.get("eji_rank") is not None else e.get("ej"),
-        # Scored scalar (§2B): a super-emitter-flagged well uses our own modeled
-        # right-tail anchor (not an invented measurement); else the point.
-        "methane": (methane.t_co2e_gwp100_high if methane.super_emitter
-                    else methane.t_co2e_gwp100_point),
-        "plug_cost": plug.point_usd,
-        "program_match": scoring.program_match_score(base.get("state_abbr")),
     }
     return rec
 
@@ -91,7 +94,8 @@ def _load(name: str):
 # else (full score, methane, plug_cost, carbon, full enrichment, provenance) is
 # lazy-loaded per shard only when a well's DossierPanel opens.
 _SLIM_ENRICH_KEYS = (
-    "population", "schools_within_1mi", "nearest_school_m", "nearest_school", "county",
+    "population", "population_1mi", "schools_within_1mi", "nearest_school_m",
+    "nearest_school", "county",
 )
 SHARD_SIZE = 1000
 
@@ -108,6 +112,7 @@ def _slim_record(r: dict) -> dict:
         "quad_name": r.get("quad_name"),
         "county_group": r.get("county_group"),
         "state": r.get("state"),
+        "source": r.get("source"),  # "lbnl" | "unet_2026" — provenance for the UI
         "score": {"composite": r["score"]["composite"]},
     }
     # Omit null enrichment fields (and the dict entirely when empty). Most records

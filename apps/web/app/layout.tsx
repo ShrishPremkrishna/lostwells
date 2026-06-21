@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const display = Fraunces({
+// uidesign.md §3: Playfair Display (editorial headers), Inter (functional body),
+// JetBrains Mono (coordinates / IDs / agent feed — "makes data feel like data").
+const display = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-display",
@@ -15,10 +17,16 @@ const sans = Inter({
   display: "swap",
 });
 
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Lost Wells — Finding America's Undocumented Orphaned Wells",
+  title: "Finding the Lost Wells of Appalachia",
   description:
-    "An investigative map of undocumented orphaned oil & gas wells: U-Net detections atop 117,672 documented wells, a Claude agent swarm, and a transparent human-impact ranking under the $4.7B federal plugging program.",
+    "We ran a U-Net over historical USGS topographic maps and found 36,919 undocumented orphaned oil & gas wells across Appalachia — then ranked them by who lives on top of them and mapped a path to plug them.",
 };
 
 export default function RootLayout({
@@ -27,7 +35,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable}`}>
+    <html
+      lang="en"
+      className={`${display.variable} ${sans.variable} ${mono.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

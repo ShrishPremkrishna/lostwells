@@ -144,6 +144,7 @@ def build_candidates() -> gpd.GeoDataFrame:
                 "status_norm": N.STATUS_UNDOCUMENTED,
                 "is_plugged": False,
                 "lat": lat, "lon": lon,
+                "source": "lbnl",  # LBNL CA/OK published detections (provenance)
             })
     df = pd.DataFrame(rows)
     # A detection on a county line (e.g. Fairmont Butte on the Kern/LA border)
@@ -398,6 +399,7 @@ def write_candidates(gdf: gpd.GeoDataFrame) -> None:
         "well_id", "layer", "name", "county_group", "state_abbr", "state",
         "quad_name", "quad_id", "quad_year", "quad_scale", "detection_index",
         "type_norm", "status_norm", "is_plugged", "lat", "lon", "nearest_doc_well_m",
+        "source",  # provenance: "lbnl" (CA/OK) | "unet_2026" (Appalachia)
     ]
     records = []
     for _, r in gdf.iterrows():

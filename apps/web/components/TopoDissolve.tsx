@@ -121,8 +121,8 @@ export function TopoDissolve({ hero, onClose }: { hero: Candidate; onClose: () =
           <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-ink-950/95 to-transparent p-5 pt-12">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-danger">
-                  Confirmed exposure
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#7aae8a" }}>
+                  Discovered candidate · {hero.hero?.pathway ?? "pathway"}
                 </div>
                 <h3 className="font-display mt-1 text-2xl text-paper">{hero.hero?.title}</h3>
                 <p className="mt-0.5 text-xs text-ink-300">{hero.hero?.place}</p>

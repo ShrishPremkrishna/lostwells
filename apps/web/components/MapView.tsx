@@ -1,15 +1,37 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ScatterplotLayer } from "@deck.gl/layers";
 import type { CandidateLite, DocumentedWells } from "@/lib/types";
-import { scoreRGB, TEAL, DANGER } from "@/lib/colors";
+import { TEAL, EMBER, DANGER } from "@/lib/colors";
 
-// Free, no-token dark basemap (renders in the user's browser).
-const STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+// Free, no-token basemaps. TOPO = Carto Voyager (light topographic, matches the
+// uidesign.md theme); SATELLITE/HYBRID = ESRI World Imagery rasters (no token).
+const STYLE_TOPO = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json";
+const ESRI_IMAGERY =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+const ESRI_REF =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}";
+
+type Basemap = "topo" | "satellite" | "hybrid";
+
+function styleFor(b: Basemap): string | maplibregl.StyleSpecification {
+  if (b === "topo") return STYLE_TOPO;
+  const layers: maplibregl.LayerSpecification[] = [
+    { id: "sat", type: "raster", source: "sat" } as maplibregl.LayerSpecification,
+  ];
+  const sources: Record<string, maplibregl.SourceSpecification> = {
+    sat: { type: "raster", tiles: [ESRI_IMAGERY], tileSize: 256, attribution: "Esri, Maxar" },
+  };
+  if (b === "hybrid") {
+    sources.ref = { type: "raster", tiles: [ESRI_REF], tileSize: 256 };
+    layers.push({ id: "ref", type: "raster", source: "ref" } as maplibregl.LayerSpecification);
+  }
+  return { version: 8, sources, layers } as maplibregl.StyleSpecification;
+}
 
 export interface FocusTarget {
   lon: number;
@@ -36,6 +58,13 @@ export default function MapView(props: Props) {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const overlayRef = useRef<MapboxOverlay | null>(null);
   const positionsRef = useRef<Float32Array | null>(null);
+  const [basemap, setBasemap] = useState<Basemap>("topo");
+
+  // Swap the basemap on toggle. The deck overlay is a separate control/canvas,
+  // so it survives setStyle and keeps its layers.
+  useEffect(() => {
+    if (mapRef.current) mapRef.current.setStyle(styleFor(basemap));
+  }, [basemap]);
 
   // declarative camera control (avoids ref-forwarding through next/dynamic)
   useEffect(() => {
@@ -61,7 +90,7 @@ export default function MapView(props: Props) {
     if (!containerRef.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: STYLE,
+      style: STYLE_TOPO,
       center: [-95, 38],
       zoom: 3.7,
       attributionControl: false,
@@ -106,10 +135,10 @@ export default function MapView(props: Props) {
             length: documented.count,
             attributes: { getPosition: { value: positionsRef.current, size: 2 } },
           },
-          getFillColor: [TEAL[0], TEAL[1], TEAL[2], 26],
+          getFillColor: [TEAL[0], TEAL[1], TEAL[2], 90],
           radiusUnits: "pixels",
           getRadius: 1.3,
-          radiusMinPixels: 0.4,
+          radiusMinPixels: 0.5,
           radiusMaxPixels: 2.6,
           pickable: false,
           parameters: { depthTest: false },
@@ -122,25 +151,35 @@ export default function MapView(props: Props) {
         id: "candidates",
         data: candidates,
         getPosition: (d) => [d.lon, d.lat],
-        getFillColor: (d) => {
-          const [r, g, b] = scoreRGB(d.score.composite);
-          return [r, g, b, d.well_id === selectedId ? 255 : 200];
-        },
-        getRadius: (d) => 4 + d.score.composite / 11,
-        radiusUnits: "pixels",
-        radiusMinPixels: 2.5,
-        radiusMaxPixels: 22,
+        // Discovered wells: one color, sized in METERS so they grow with zoom —
+        // near the documented-overlay size when the whole US is in view, growing
+        // to a comfortably clickable target when zoomed in (floored/capped in px).
+        // Impact score lives in the list/dossier, not the map marker. Selection
+        // bumps size + adds a white stroke.
+        getFillColor: (d) =>
+          d.well_id === selectedId
+            ? [13, 13, 13, 255] // ink — stands out on the light map + green cloud
+            : [EMBER[0], EMBER[1], EMBER[2], 205],
+        getRadius: (d) => (d.well_id === selectedId ? 150 : 55),
+        radiusUnits: "meters",
+        radiusMinPixels: 1.8,
+        radiusMaxPixels: 13,
         stroked: true,
-        getLineColor: (d) => (d.well_id === selectedId ? [255, 255, 255, 255] : [0, 0, 0, 90]),
-        getLineWidth: (d) => (d.well_id === selectedId ? 2 : 0.5),
+        getLineColor: (d) => (d.well_id === selectedId ? [255, 255, 255, 255] : [255, 255, 255, 70]),
+        getLineWidth: (d) => (d.well_id === selectedId ? 2.5 : 0.3),
         lineWidthUnits: "pixels",
         pickable: true,
         autoHighlight: true,
-        highlightColor: [255, 255, 255, 60],
+        highlightColor: [255, 255, 255, 120],
         onClick: (info) => info.object && onSelect((info.object as CandidateLite).well_id),
         onHover: (info) =>
           onHover((info.object as CandidateLite) ?? null, info.x ?? 0, info.y ?? 0),
-        updateTriggers: { getFillColor: selectedId, getLineColor: selectedId, getLineWidth: selectedId },
+        updateTriggers: {
+          getFillColor: selectedId,
+          getRadius: selectedId,
+          getLineColor: selectedId,
+          getLineWidth: selectedId,
+        },
       })
     );
 
@@ -170,5 +209,35 @@ export default function MapView(props: Props) {
     overlay.setProps({ layers });
   }, [documented, candidates, heroes, selectedId, showDocumented, onSelect, onHover]);
 
-  return <div ref={containerRef} className="absolute inset-0" />;
+  // Inline position/inset: MapLibre's stylesheet sets `.maplibregl-map{position:
+  // relative}` and loads after Tailwind, overriding the `absolute` utility — which
+  // collapses the container to 0px height (black map). Inline styles win.
+  return (
+    <>
+      <div
+        ref={containerRef}
+        className="absolute inset-0"
+        style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
+      />
+      {/* Map style toggle — bottom center, dark "field notes on glass" pill. */}
+      <div
+        className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 overflow-hidden"
+        style={{ background: "rgba(13,13,13,0.9)", border: "1px solid rgba(255,255,255,0.12)" }}
+      >
+        {(["topo", "satellite", "hybrid"] as Basemap[]).map((b) => (
+          <button
+            key={b}
+            onClick={() => setBasemap(b)}
+            className="px-3.5 py-1.5 text-[11px] uppercase tracking-[0.08em] transition-colors"
+            style={{
+              color: basemap === b ? "#fff" : "rgba(255,255,255,0.55)",
+              background: basemap === b ? "var(--color-accent)" : "transparent",
+            }}
+          >
+            {b}
+          </button>
+        ))}
+      </div>
+    </>
+  );
 }

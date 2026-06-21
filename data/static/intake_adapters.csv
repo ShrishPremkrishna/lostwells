@@ -1,0 +1,6 @@
+org,kind,intake,email,form_url,fit,routable,notes
+Orphan Well Cooperative,nonprofit_hub,form+email,info@orphanwell.org,https://orphanwell.org,"nonprofit hub with explicit report-orphan-well field + public prioritization matrix",best,"Best general routing target (HANDOFF §3.5)."
+Well Done Foundation,adopt_a_well,email,info@welldonefoundation.org,https://welldonefoundation.org/connect/,"adopt-a-well + carbon; ~$65k/well; methane-first selection",high,"Site Cloudflare-blocked -> email only."
+Rebellion Energy,for_profit_carbon,email,data@rebellionenergy.com,,"for-profit carbon, OK-centric, high-emission wells",high,"Best documented email."
+Zefiro Methane,state_rfp,via_regulator,,,"acquires via state RFP bids only",via_regulator,"Route to the state regulator's program, not Zefiro directly (HANDOFF §3.5)."
+EDF,data_source,none,,https://www.edf.org/orphanwellmap,"not a plugger - bulk data source (120k-well dataset)",data_only,"Seed/ingest only, not a routing target."

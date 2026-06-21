@@ -26,28 +26,23 @@ METRIC_CONFIG = {
     "drinking_water":   ("drinking_water", "pct"),
     "svi":              ("svi", "pct"),
     "ej":               ("ej", "pct"),
-    "methane":          ("methane", "pct"),
-    "fundability_cost": ("plug_cost", "pct_inv"),
-    "program_match":    ("program_match", "direct"),
 }
 
-# Phase 5 rebalance: with SVI + schools + EJ now at near-full coverage across all
-# ~38k wells, the near-constant program_match (≈1.0 for every well) was diluting
-# the real signal, so it is halved; the freed weight flows to the mission-core
-# climate (methane), equity (ej), and the genuinely discriminating plug cost.
-# Sum = 1.00. Groups: human_exposure 0.44 / equity 0.22 / methane 0.17 / fundability 0.17.
+# Ranking is driven ONLY by the metrics that actually discriminate between
+# undocumented wells: human exposure + community vulnerability. methane / plug-cost
+# / program-match were near-constant region-proxies (2, 2, and 1 distinct values
+# across all wells), so they are dropped from the composite — they remain computed
+# and shown as *labeled context* on each well, just not as ranking signal. Weighting
+# is population-led ("ranked by who lives on top of them"). Sum = 1.00.
+# Groups: human_exposure 0.70 / equity 0.30.
 DEFAULT_WEIGHTS = {
-    "population": 0.15, "schools": 0.12, "hospitals": 0.05, "drinking_water": 0.12,
-    "svi": 0.12, "ej": 0.10,
-    "methane": 0.17,
-    "fundability_cost": 0.12, "program_match": 0.05,
+    "population": 0.30, "schools": 0.15, "drinking_water": 0.15, "hospitals": 0.10,
+    "svi": 0.15, "ej": 0.15,
 }
 
 GROUPS = {
     "human_exposure": ["population", "schools", "hospitals", "drinking_water"],
     "equity": ["svi", "ej"],
-    "methane": ["methane"],
-    "fundability": ["fundability_cost", "program_match"],
 }
 
 METRIC_LABELS = {
@@ -57,9 +52,6 @@ METRIC_LABELS = {
     "drinking_water": "Drinking-water service area",
     "svi": "Social Vulnerability (SVI)",
     "ej": "EJ burden (CEJST/EJI)",
-    "methane": "Methane proxy (modeled)",
-    "fundability_cost": "Low plug cost (tractable)",
-    "program_match": "Funding-program match",
 }
 
 

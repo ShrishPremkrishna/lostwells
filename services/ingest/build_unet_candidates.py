@@ -285,6 +285,7 @@ def synthesize(df: pd.DataFrame) -> pd.DataFrame:
     df["type_norm"] = N.TYPE_UNKNOWN
     df["status_norm"] = N.STATUS_UNDOCUMENTED
     df["is_plugged"] = False
+    df["source"] = "unet_2026"  # our Appalachia U-Net detections (provenance)
     df["well_id"] = [
         f"unet_{ab}_{slug}_{y}_{sc}_geo_{s}"
         for ab, slug, y, sc, s in zip(
@@ -305,6 +306,7 @@ KEEP = [
     "well_id", "layer", "name", "county_group", "state_abbr", "state",
     "quad_name", "quad_id", "quad_year", "quad_scale", "detection_index",
     "type_norm", "status_norm", "is_plugged", "lat", "lon", "nearest_doc_well_m",
+    "source",  # "unet_2026" provenance tag
 ]
 
 

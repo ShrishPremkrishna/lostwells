@@ -63,19 +63,15 @@ context — that honesty is the point. *(The panel "Replay" is a deterministic
 animation over cached dossiers; a live run is `python services/swarm/run_swarm.py
 --total 12`, which works against the real API.)*
 
-## 4. The signature reveal — three hero cases (topo → today)
+## 4. The signature reveal — hero cases (topo → today)
 
-Open a **hero well** (red) → **Reveal topo → today**. Drag the swipe. These three are
-the emotional core and the wells we case end-to-end:
-
-- **Admiral King Elementary, Lorain OH** — a leaking well found **under the school
-  gym** (2014), 375 students evacuated. The historical topo dissolves into today's
-  satellite over the school.
-- **AllenCo / St. Vincent School, Los Angeles** — 21 urban oil wells under 1,000 ft
-  from a school; the 1950s topo dissolves into today's neighborhood.
-- **Vowinckel, PA** — six feet from a family's only drinking water. Ranks *low* on
-  aggregate exposure but is a textbook individual-harm case — the score measures
-  population impact, and we say so.
+> **TBD — to be rebuilt.** The previous heroes (Admiral King OH, Vowinckel PA,
+> AllenCo CA) were *confirmed / already-remediated* wells, not wells we
+> discovered, so they were removed. The new heroes will be **3 wells we actually
+> discovered**, each demonstrating a **different plugging pathway** (e.g.
+> BIL/state-program · carbon-credit-funded · landowner/charity) and each ranking
+> high on local negative impact — cased end-to-end and used for the topo → today
+> reveal. See `docs/IMPLEMENTATION_PLAN.md` §3.14.
 
 ## 5. Close (the product)
 

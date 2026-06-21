@@ -132,9 +132,14 @@ def test_build_record_uses_high_anchor_when_super_emitter():
     flagged = SC.build_record(base, None, {"super_emitter": True,
                                            "super_emitter_dist_m": 500.0})
     unflagged = SC.build_record(base, None, {"super_emitter": False})
-    assert flagged["metrics"]["methane"] == flagged["methane"]["t_co2e_gwp100_high"]
-    assert unflagged["metrics"]["methane"] == unflagged["methane"]["t_co2e_gwp100_point"]
-    assert flagged["metrics"]["methane"] > unflagged["metrics"]["methane"]
+    # methane/plug_cost are display context now (not scored metrics). A super-emitter
+    # well surfaces as a carbon-funded-plugging candidate via the §3.6 tier.
+    assert flagged["methane"]["super_emitter"] is True
+    assert flagged["methane"]["t_co2e_gwp100_high"] > flagged["methane"]["t_co2e_gwp100_point"]
+    assert flagged["carbon"]["carbon_viable"] is True
+    assert unflagged["carbon"]["carbon_viable"] is False
+    # the 6 ranking metrics never include methane/plug_cost/program_match
+    assert not ({"methane", "plug_cost", "program_match"} & set(flagged["metrics"]))
     # undocumented candidate -> status-unknown blend -> undifferentiated badge
     assert unflagged["methane"]["differentiated"] is False
     assert unflagged["methane"]["status_known"] is False
@@ -170,6 +175,39 @@ def test_carbon_rarely_pencils_for_typical_well():
     assert k.self_funding_ratio_point < 0.5      # far below 1.0 for a typical well
     assert k.pencils_out is False
     assert k.creditable_tonnes > 0
+    assert k.tier == "negligible" and k.carbon_viable is False
+
+
+def test_carbon_tier_flags_high_emitters():
+    plug = estimate_plug_cost(type_norm="gas").point_usd
+    # A heavy-tail / measured super-emitter well (ACR959-class) self-funds.
+    big = carbon_kicker(5000.0, plug)               # ~thousands of t CO2e/yr
+    assert big.carbon_viable is True
+    assert big.tier in ("self_funding", "partial")
+    # A typical low-emitter does not pencil...
+    small = carbon_kicker(5.0, plug)
+    assert small.carbon_viable is False
+    # ...unless an observed EPA super-emitter event forces viability.
+    flagged = carbon_kicker(5.0, plug, super_emitter=True)
+    assert flagged.carbon_viable is True
+
+
+# --- pathways (Act layer) -------------------------------------------------
+def test_pathways_cejst_disadvantaged_prioritizes_federal():
+    import pathways as PW
+    ps = PW.pathways_for(state_abbr="OH", cejst_disadvantaged=True,
+                         carbon_viable=False, near_people=True)
+    keys = [p["key"] for p in ps]
+    assert "federal_bil" in keys and "state_program" in keys
+    assert ps[0]["key"] == "federal_bil"      # Justice40 federal is top priority
+    assert "carbon_credit" not in keys        # not a high-emitter
+    assert "charity" in keys                   # near people -> adopt-a-well fit
+
+
+def test_pathways_carbon_viable_surfaces_carbon():
+    import pathways as PW
+    ps = PW.pathways_for(state_abbr="PA", carbon_viable=True, carbon_tier="self_funding")
+    assert "carbon_credit" in [p["key"] for p in ps]
 
 
 # --- composite scoring ----------------------------------------------------
@@ -204,25 +242,28 @@ def test_higher_exposure_scores_higher():
     assert hi["score"]["composite"] > lo["score"]["composite"]
 
 
-def test_lower_plug_cost_is_more_fundable():
-    recs = [
-        _rec(id="cheap", population=10, plug_cost=20000, program_match=1.0),
-        _rec(id="pricey", population=10, plug_cost=500000, program_match=1.0),
-    ]
+def test_constant_metrics_excluded_from_composite():
+    # methane / plug_cost / program_match are computed for display only — they must
+    # NOT be ranking signal: absent from weights/config, and supplying their raw
+    # values must not affect the breakdown.
+    for k in ("methane", "fundability_cost", "program_match", "plug_cost"):
+        assert k not in scoring.DEFAULT_WEIGHTS
+        assert k not in scoring.METRIC_CONFIG
+    recs = [_rec(id="a", population=100, svi=0.9, ej=0.7,
+                 methane=8.0, plug_cost=76000, program_match=1.0)]
     scoring.score_set(recs)
-    cheap = next(r for r in recs if r["well_id"] == "cheap")
-    pricey = next(r for r in recs if r["well_id"] == "pricey")
-    assert cheap["score"]["normalized"]["fundability_cost"] > \
-        pricey["score"]["normalized"]["fundability_cost"]
+    bd = recs[0]["score"]["breakdown"]
+    assert set(bd) <= set(scoring.DEFAULT_WEIGHTS)
+    assert not ({"methane", "plug_cost", "program_match"} & set(bd))
 
 
 def test_missing_metrics_are_renormalized_not_zeroed():
-    # only methane present -> composite should equal that metric's normalized*100
-    recs = [_rec(id="x", methane=8.0), _rec(id="y", methane=4.0)]
+    # only svi present -> composite should equal that metric's normalized*100
+    recs = [_rec(id="x", svi=0.8), _rec(id="y", svi=0.4)]
     scoring.score_set(recs)
     for r in recs:
-        assert r["score"]["present_metrics"] == ["methane"]
-        assert set(r["score"]["missing_metrics"]) == set(scoring.DEFAULT_WEIGHTS) - {"methane"}
+        assert r["score"]["present_metrics"] == ["svi"]
+        assert set(r["score"]["missing_metrics"]) == set(scoring.DEFAULT_WEIGHTS) - {"svi"}
         assert 0 <= r["score"]["composite"] <= 100
 
 
