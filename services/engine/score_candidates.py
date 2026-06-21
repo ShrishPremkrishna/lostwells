@@ -10,6 +10,7 @@ beforehand too (those metrics simply read as missing and are renormalized out).
 from __future__ import annotations
 
 import json
+import math
 import os
 import shutil
 import sys
@@ -125,11 +126,30 @@ def _slim_record(r: dict) -> dict:
     return out
 
 
+def _nan_to_none(o):
+    """Recursively replace float NaN/Infinity with None so the output is valid
+    JSON (the browser's JSON.parse rejects bare NaN, unlike Python's loader)."""
+    if isinstance(o, float):
+        return o if math.isfinite(o) else None
+    if isinstance(o, dict):
+        return {k: _nan_to_none(v) for k, v in o.items()}
+    if isinstance(o, list):
+        return [_nan_to_none(v) for v in o]
+    return o
+
+
+def _dump_json(obj) -> str:
+    # allow_nan=False makes any residual non-finite float a hard error rather
+    # than silently emitting browser-invalid `NaN`/`Infinity`.
+    return json.dumps(_nan_to_none(obj), separators=(",", ":"),
+                      default=str, allow_nan=False)
+
+
 def write_web_payloads(candidates: list[dict]) -> None:
     """Emit the slim base payload + rank-bucketed detail shards for the web app."""
     web = PROC / "candidates.web.json"
     slim = [_slim_record(r) for r in candidates]
-    web.write_text(json.dumps(slim, separators=(",", ":"), default=str))
+    web.write_text(_dump_json(slim))
     print(f"[score] slim payload {len(slim)} -> {web.relative_to(ROOT)} "
           f"({web.stat().st_size / 1e6:.1f} MB)")
 
@@ -157,7 +177,7 @@ def write_web_payloads(candidates: list[dict]) -> None:
     total = 0
     for nn, recs in sorted(shards.items()):
         p = detail_dir / f"{nn:02d}.json"
-        p.write_text(json.dumps(recs, separators=(",", ":"), default=str))
+        p.write_text(_dump_json(recs))
         max_bytes = max(max_bytes, p.stat().st_size)
         total += len(recs)
     assert total == len(unique_ids), f"shard total {total} != unique ids {len(unique_ids)}"

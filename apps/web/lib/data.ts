@@ -19,7 +19,8 @@ export const loadCandidates = () =>
 export const shardOf = (rank: number) => Math.floor((rank - 1) / 1000);
 
 export const loadDetailShard = (shard: number) =>
-  getJSON<Record<string, Candidate>>(`detail/${shard}.json`);
+  // Shard files are zero-padded to 2 digits (detail/00.json) by the pipeline.
+  getJSON<Record<string, Candidate>>(`detail/${String(shard).padStart(2, "0")}.json`);
 
 export const loadMeta = () => getJSON<Meta>("meta.json");
 
