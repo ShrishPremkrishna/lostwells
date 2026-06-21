@@ -101,6 +101,10 @@ data/cache/enrich.sqlite           # enrichment response cache
   `<dossier>…</dossier>` JSON parse). Driven by SDK (not LangChain) because
   `ChatAnthropic` **hangs** in this sandbox; **streaming** because non-streaming
   web search gets **idle-dropped** by the egress proxy. Keep both lessons.
+  **Note (§2W):** keep the `web_search_*` server tool as the free, default web
+  layer; the only addition is **one** `browser_task` tool (Browserbase Stagehand)
+  for facts behind a form/login/WAF that `web_search` can't reach — the streaming,
+  the continuation loop, the sentinel, and the `<dossier>` parse all stay.
 - **`services/ingest/enrich.py`** — generic `(lat,lon)→dict` thread-pool + SQLite
   cache. Extend with new `lookup_*()` funcs and the tract-dedup key (§Section 2A).
 - **`services/engine/scoring.py`** — `METRIC_CONFIG` / `DEFAULT_WEIGHTS` /
@@ -123,10 +127,12 @@ semantic-cache wrapper).
 
 **Sponsor tools — tightly scoped (do not spread them):** **Redis** (`redisvl`)
 is the one semantic cache in front of the agent investigation (§2R); **Browserbase**
-(`@browserbasehq/stagehand`) is the one browser-automation step that resolves
-landowner names for the demo subset (§3.6). Each earns its place against a real
-blocker; neither is wired anywhere else. `graph.py` keeps its in-process
-`MemorySaver()` as-is.
+(`@browserbasehq/stagehand`) is the one browser-automation escalation for facts
+behind a form/login/WAF that Claude's free `web_search` can't reach — chiefly the
+landowner lookup for the demo subset (§2W, §3.6). The general web layer stays free
+Anthropic `web_search`. Each sponsor earns its place against a real blocker;
+neither is wired anywhere else. `graph.py` keeps its in-process `MemorySaver()`
+as-is.
 
 ---
 
@@ -284,7 +290,8 @@ consolidation counts by source/region.
 - **Hosts that block automation** (`www.kgs.ku.edu` 503, ISGS clearinghouse WAF
   503, `gis.in.gov` curl 000, michigan.gov 403) → in every case an alternate open
   REST/FTP host exists (used above); use a browser User-Agent for HTML-only
-  fallbacks.
+  fallbacks — or, where a WAF blocks even that, a **Browserbase** real browser +
+  proxy/stealth (§2W, demo subset only).
 
 ---
 
@@ -398,6 +405,64 @@ human-exposure pillar becomes **fully computed** (closes `PROGRESS.md` §2.2). R
 on all wells. Keep the existing invariant: breakdown sums to composite, missing
 metrics renormalized. Surface any residual metric uniformity honestly.
 
+## 2W — Browser automation: **Browserbase** (Stagehand) — the one interactive-only escalation
+
+> **The brain and the general web stay free.** Claude keeps driving the
+> investigation via the Anthropic SDK with **server-side `web_search`** (the proven
+> `investigator.py` path) for everything readable on the open web — that is the
+> free, default web layer and it is *not* replaced. **Browserbase earns exactly
+> one job:** the facts that `web_search` and plain HTTP **cannot reach because they
+> live behind a form, a login, or a WAF** — county assessor viewers with no REST
+> service, Recorder-of-Deeds / skip-trace pages, and forms-only SOS / court entity
+> searches (JS apps + Cloudflare/WAF). One keyed platform, used only where it
+> genuinely unblocks the product (Prime Directive #2: free-first; sponsor tool not
+> bolted on everywhere).
+
+**How it wires to Claude (the brain stays the Anthropic SDK).** Keep
+`investigator.py` exactly as proven — `web_search_*` server tool, streaming,
+`pause_turn` loop, per-well sentinel, `<dossier>` parse, cached `dossiers.json` as
+the floor. Add **one** new Claude tool-use function, `browser_task(site,
+instruction, schema)`, backed by a **Stagehand** session
+(`act`/`observe`/`extract`, `env:"BROWSERBASE"`; Agent Identity for legitimate
+login, proxy/stealth for WAFs). For the **deterministic** pulls (parcel owner,
+operator-by-name) call Stagehand **`extract(schema)`** directly (Zod/pydantic)
+rather than a free-form agent, so output is structured + verifiable. Claude
+escalates to `browser_task` **only** when `web_search` hits a wall; everything
+else stays on the free path.
+
+**Honesty dividend (serves Prime Directive #4).** Browserbase **session replays**
+(stream within seconds, free on all plans) are a *verifiable provenance
+artifact*: store the replay/session URL in the dossier `sources` beside every
+browser-derived claim. "Here's the recorded session showing the assessor record"
+is stronger sourcing than a bare URL — and keeps every claim sourced +
+confidence-tagged (BROWSER_BASED_AGENT_TRAINING.md §4).
+
+**Scope: batch precompute on the demo / top subset only** — never inside the live
+SSE route (one browser session can blow the 300 s budget, §7.2). The free tier
+(3 concurrent browsers) is sufficient because only the handful of wall-blocked
+lookups in the demo subset ever touch a browser; the bulk runs on `web_search`.
+
+**New / changed files:**
+- `services/swarm/web/browserbase_client.py` (NEW) — thin `browser_extract(schema, instruction)` wrapper (Browserbase Python SDK + Stagehand-py); SQLite-cached like `enrich.py`.
+- `services/swarm/investigator.py` — **add** the `browser_task` tool to the existing tool list; do **not** touch the `web_search` wiring, streaming, sentinel, or `<dossier>` parse.
+- `apps/web/lib/browserbase.ts` (NEW) — TS Stagehand wrapper, used by the batch precompute (not the live route).
+- Deps: `browserbase`, `stagehand-py` (Python); `@browserbasehq/sdk`, `@browserbasehq/stagehand` (web). Env: `BROWSERBASE_API_KEY`, `BROWSERBASE_PROJECT_ID` (server-side only).
+
+**BLOCKERS + RANKED BACKUPS (§2W):**
+1. **Sandbox egress reachability UNVERIFIED** (doc ethos: probe before trusting) →
+   reachability-probe a Browserbase session-create from the container before
+   relying on it. **Floor:** the free Anthropic `web_search` path already carries
+   the whole investigation; if Browserbase is unreachable, the wall-blocked
+   landowner fields fall back to manual assessor/deeds lookup for the few demo
+   wells (§3.6) — nothing else regresses.
+2. **Free-tier cap** (3 concurrent browsers) → only the demo-subset wall-blocked
+   lookups use a browser; cache results (SQLite). The bulk never touches it.
+3. **Site/DOM changes** → Stagehand self-heals (NL over the accessibility tree);
+   still pin `extract` schemas and spot-check a sample.
+4. **Captcha / hard auth (e.g. PACER)** → Agent Identity where legitimate;
+   otherwise mark the field **unverified** (never invent) and fall back to the
+   free `web_search` SOS/news path.
+
 ## 2D — Agentic investigation on the top ~100–300 (ownership / liability)
 Extend `run_swarm.py` cohort 12 → top ~100–300 by score (+ heroes). Add a
 **structured ownership/liability investigator** track in `investigator.py`. The
@@ -459,6 +524,19 @@ wrapper, used by both the investigator and the live route); dep `redisvl`
 more than a cache of the cased subset needs; on any Redis outage `check()` simply
 misses and the agent runs live, so caching never blocks the demo (floor = §7.5).
 
+**Per-source browser playbooks (Browserbase `browser_task` of §2W — demo / top
+subset only):** these are the form/auth/WAF walls free `web_search` can't cross,
+reachable via Stagehand. Everything readable on the open web stays on `web_search`.
+- *State SOS corporate registry* (bankruptcy / shell-company transfers): `act`
+  "search for `<operator>`" → `extract` `{entity, status, officers, filing_dates,
+  successor}`.
+- *TX RRC EWA Wellbore Query* (operator absent from GIS, §1.3; 503-prone JS app):
+  Stagehand drives EWA by API# → operator/lease; proxy/stealth + retry on 503.
+- *ND DMR* free per-well form (§1.3, no free bulk): `act` + `extract` per demo well.
+- *PA legacy / KY status fields* and other HTML-only registries: try `web_search`
+  / plain fetch first; escalate to `browser_task` only if interactive.
+- WAF-blocked state hosts (§1.5: ISGS / KGS / michigan.gov) → Browserbase real browser.
+
 ## 2E — BLOCKERS + RANKED BACKUPS (Section 2)
 - **EPA endpoints flaky** (Envirofacts 500↔200, NWI query host 500, SSA token) →
   always pair a hosted service with a **download + local PIP**; the downloads are
@@ -517,13 +595,16 @@ manual review.
 
 **lat/lon → community/EJ orgs:** **no free point→org dataset** — derive
 "impacted community" from EJI/CEJST tract scores; hand-compile orgs per region.
-Don't promise automated org lookup.
+Claude's free `web_search` can surface candidate local orgs per region to seed
+that hand-compiled list. Don't promise automated org lookup.
 
 ## 3.3 `services/engine/story.py` — Claude-synthesized sourced narrative
 Evidence-grounded advocacy (not propaganda): a tailored call-to-action ("could be
 plugged by next month if X acts"), **every claim cited + confidence-tagged**,
 tuned to the chosen funder type. Reuse the `investigator.py` SDK+streaming
-pattern.
+pattern over the free `web_search` layer for fresh sourcing; for any fact that
+only came from a `browser_task` escalation (§2W), attach the Browserbase
+session-replay URL as provenance.
 
 ## 3.4 `services/engine/assemble_cases.py`
 Merge evidence + pathways + actors + story → `data/processed/case_files.json` for
@@ -540,6 +621,12 @@ email/form-submission to the best match:
 | **Well Done Foundation** | `https://welldonefoundation.org/connect/` + `info@welldonefoundation.org` (Cloudflare-blocked site → email only) | adopt-a-well + carbon; ~$65k/well; methane-first selection | high value, email-only |
 | **Zefiro Methane** | acquires via **state RFP bids** only → route to the **state regulator's** program, not Zefiro | state-program wells | not directly routable |
 | **EDF** | not a plugger — `https://www.edf.org/orphanwellmap` is a **bulk data source** (120k-well dataset) | seed/ingest | data only |
+
+Use free `web_search` to verify each org's *current* intake URL, email, and
+required form fields before emitting — intake forms drift, and a stale address is
+a silently dropped case. For form-only intakes (no email) behind a JS/WAF wall,
+a Browserbase `browser_task` (§2W) `act` can pre-fill a draft submission for human
+review (we **mobilize**, we don't auto-submit — Prime Directive #1).
 
 ## 3.6 BLOCKERS + RANKED BACKUPS (Section 3)
 - **Parcel/landowner — database-first** (full recipe in
@@ -605,10 +692,14 @@ export const runtime = 'nodejs';          // NOT edge (needs full SDK + 300s; ed
 export const dynamic = 'force-dynamic';   // never cache an SSE route
 export const maxDuration = 300;           // Hobby ceiling; 120s run fits well under
 ```
-- Use `@anthropic-ai/sdk` `client.messages.stream({...})` with
-  `{ type:'web_search_20260209', name:'web_search', max_uses:8 }` (fallback
-  `_20250305`). **Port `services/swarm/investigator.py` verbatim** (system prompt,
-  `<dossier>` schema, source extraction, `pause_turn` continuation loop).
+- Use `@anthropic-ai/sdk` `client.messages.stream({...})` with the server-side
+  **`web_search`** tool (the free, proven path). **Port
+  `services/swarm/investigator.py`'s** system prompt, `<dossier>` schema, source
+  extraction, and `pause_turn` continuation loop verbatim. The live route runs on
+  `web_search` only — Browserbase `browser_task` (§2W) is **not** called inside the
+  SSE route (a browser session can blow the 300 s budget); any browser-derived
+  field is precomputed in the Python batch and served from `dossiers.json` /
+  `case_files.json`.
 - Return `new Response(stream, { headers:{ 'Content-Type':'text/event-stream',
   'Cache-Control':'no-cache, no-transform', 'Connection':'keep-alive' }})`. Don't
   `await` the whole stream before returning — return the stream so Next flushes
@@ -617,8 +708,10 @@ export const maxDuration = 300;           // Hobby ceiling; 120s run fits well u
   HTTP/1.1 intermediaries drop idle connections (the exact idle-drop the Python
   swarm hit; streaming + heartbeat is the fix).
 - Handle `stop_reason:"pause_turn"` (append the paused assistant message, call
-  again). **Display source citations** (Anthropic policy). Enable web search once
-  in the Claude Console (admin). Cost ≈ $10/1k searches → bound `max_uses`.
+  again). **Display source citations** (Anthropic policy); for any precomputed
+  browser-derived fact, include its Browserbase **session-replay URL** (§2W
+  honesty dividend). Enable web search once in the Claude Console (admin). Cost ≈
+  $10/1k searches → bound `max_uses`.
 - `ANTHROPIC_API_KEY` = server-side (unprefixed) Vercel env var, read only in the
   Route Handler. Model `claude-opus-4-8` or `claude-sonnet-4-6` (cheaper, fine).
 - **Before invoking, check the §2R Redis `SemanticCache`** (`check()` → on hit,
@@ -674,9 +767,11 @@ export const maxDuration = 300;           // Hobby ceiling; 120s run fits well u
    datasets) → human-exposure fully computed; **§Section 2B** GHGI methane;
    **§Section 2C** re-score.
 3. **§Section 2D agentic + §Section 3 engines** → case files for top ~100–300
-   (incl. ≥1 landowner case); deterministic pathway/actor for all wells. Put the
-   **§2R Redis `SemanticCache`** in front of the investigator, and run the **§3.6
-   Browserbase** parcel-owner lookup over the demo subset for the landowner case.
+   (incl. ≥1 landowner case); deterministic pathway/actor for all wells. The agent
+   runs on free `web_search`; put the **§2R Redis `SemanticCache`** in front of it.
+   For the landowner case, do the free ArcGIS REST parcel lookup first (§3.6); for
+   the wall-blocked remainder, reachability-probe a Browserbase session, then run
+   the **§2W `browser_task`** lookup over the demo subset.
 4. **§7 backend + UI** → live SSE route + CaseFile/actor-map UI; **deploy to
    Vercel**.
 5. **Demo arc:** "found wells nobody knew existed → here's the complete case →
@@ -707,6 +802,8 @@ export const maxDuration = 300;           // Hobby ceiling; 120s run fits well u
 | reps | `https://unitedstates.github.io/congress-legislators/legislators-current.json` | ✅ CC0 |
 | state legislators | `https://data.openstates.org/people/current/<st>.csv` | ✅ CC0 |
 | state O&G operator-by-API | CO/NM/CA/OK/KS REST `/query` (§Section 1.3) | ✅ |
+| agent web search (free, default) | Anthropic server-side `web_search` (`investigator.py`, ported to the live route) | ✅ ~$10/1k searches |
+| agent browser: forms/auth/WAF | Browserbase Stagehand `browser_task` (`act`/`extract`, `env:"BROWSERBASE"`) | ✅ 3 free concurrent (demo subset) |
 | live agent route | `apps/web/app/api/investigate/[id]/route.ts` (CREATE) | — |
 | agent response cache (§2R) | RedisVL `SemanticCache` (`check()`/`store()`, `filterable_fields`); Redis Cloud free = 30 MB | ✅ sponsor |
 | landowner owner lookup (§3.6) | parcel ArcGIS REST `/query` (OH/WV/KY, `?f=pjson` for owner field) + ReportAll/ATTOM trial (PA/gaps) | ✅ free/trial |
