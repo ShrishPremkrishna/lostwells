@@ -762,10 +762,14 @@ export const maxDuration = 300;           // Hobby ceiling; 120s run fits well u
 
 1. **§Section 1 consolidate (floor) → integrate U-Net detections when they
    arrive (validate Kern)** → unified DB with a few discoveries + state depth/type/
-   status/operator joined.
+   status/operator joined. — **✅ code-complete (Appalachia OH/WV/PA/NY/KY):**
+   `state_registries.py` + `build_datastore.py consolidate()` (attach by API →
+   spatial ≤50 m → expand → `lost_wells.json`). Awaiting live ingest run + U-Net.
 2. **§Section 2A tract-dedup enrichment on all wells** (TIGER PIP + the national
    datasets) → human-exposure fully computed; **§Section 2B** GHGI methane;
-   **§Section 2C** re-score.
+   **§Section 2C** re-score. — **✅ §2A code-complete:** `tracts.py` (TIGER PIP) +
+   `enrich_tract.py` (drinking water, hospitals, true 1-mi pop, CEJST/EJI),
+   awaiting live ingest run. **§2B/§2C still TODO.**
 3. **§Section 2D agentic + §Section 3 engines** → case files for top ~100–300
    (incl. ≥1 landowner case); deterministic pathway/actor for all wells. The agent
    runs on free `web_search`; put the **§2R Redis `SemanticCache`** in front of it.

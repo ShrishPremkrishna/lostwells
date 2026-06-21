@@ -62,8 +62,9 @@ CANONICAL = ["api", "lat", "lon", "type", "status", "operator", "depth"]
 REGISTRIES: dict[str, dict] = {
     "OH": {
         "mode": "rest",
-        "url": ("https://gis.ohiodnr.gov/arcgis_site2/rest/services/"
-                "OIL_GAS/Oil_And_Gas_Wells/FeatureServer/3/query"),
+        # HANDOFF §1.3 verified-live: services5 ArcGIS Online FeatureServer.
+        "url": ("https://services5.arcgis.com/ajRlmtxbNBjZggOT/arcgis/rest/"
+                "services/Oil_And_Gas_Wells/FeatureServer/3/query"),
         # OH WELL_STATUS_DESCRIPTION vocab incl. Orphan/Plugged/Idle/Abandoned.
         "where": ("WELL_STATUS_DESCRIPTION IN "
                   "('Orphan','Plugged','Idle and Orphan','Abandoned',"
@@ -82,8 +83,9 @@ REGISTRIES: dict[str, dict] = {
     },
     "WV": {
         "mode": "rest",
+        # HANDOFF §1.3 verified-live: WVDEP_enterprise service path.
         "url": ("https://tagis.dep.wv.gov/arcgis/rest/services/"
-                "oil_gas/MapServer/7/query"),
+                "WVDEP_enterprise/oil_gas/MapServer/7/query"),
         # WV layer 7 = wells; layer 4 = plugged wells (folded in via status).
         "where": "1=1",
         "fieldmap": {
@@ -96,11 +98,13 @@ REGISTRIES: dict[str, dict] = {
     },
     "PA": {
         "mode": "rest",
-        # PASDA item 1088: PA DEP oil & gas locations. Operator present, no depth.
+        # HANDOFF §1.3: PASDA 1088 (PA DEP O&G); operator present, no depth.
+        # Layer index + status field are unconfirmed upstream, so we pull the
+        # layer wide (where=1=1) and filter to on-mission status locally in
+        # normalize_state rather than risk a bad-field query error.
         "url": ("https://mapservices.pasda.psu.edu/server/rest/services/"
                 "pasda/DEP/MapServer/0/query"),
-        "where": ("WELL_STATU IN ('Orphan','Abandoned','Plugged OG Well',"
-                  "'DEP Plugged','Regulatory Inactive Status')"),
+        "where": "1=1",
         "fieldmap": {
             "API": "api",
             "WELL_STATU": "status",
@@ -160,14 +164,17 @@ def fetch_rest(cfg: dict) -> pd.DataFrame:
     does not speak GeoJSON.
     """
     sess = _session()
-    out_fields = ",".join(cfg["fieldmap"].keys())
+    # Request all attributes (outFields=*) rather than the fieldmap keys: the
+    # HANDOFF source-column names are verified but vary slightly per layer, and
+    # ``normalize_state``'s ``col()`` already tolerates absent columns. Pulling
+    # everything de-risks the live run against any single field-name mismatch.
     rows: list[dict] = []
     offset = 0
     pbar = tqdm(desc=f"  REST {cfg['url'].split('/services/')[-1][:24]}", unit="rec")
     while True:
         params = {
             "where": cfg.get("where", "1=1"),
-            "outFields": out_fields,
+            "outFields": "*",
             "returnGeometry": "true",
             "outSR": "4326",
             "resultOffset": offset,

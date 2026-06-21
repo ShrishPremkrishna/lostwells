@@ -6,8 +6,37 @@
 
 **Status:** full app built end-to-end on `main` (7 commits), working tree clean.
 Builds compile; the live agent swarm ran on real data with the provided API key.
-**Not yet done:** in-browser visual QA, complete human-exposure metrics, real
-georeferenced hero topo, and any U-Net execution.
+**Not yet done:** in-browser visual QA, real georeferenced hero topo, and any
+U-Net execution.
+
+**Update (§2A enrichment RAN LIVE on the CA/OK candidates — data regenerated):**
+the tract-dedup human-exposure/EJ enrichment (§2A) has now been **executed live**
+against all 1,303 candidates and `data/processed/{enrichment,candidates.scored,
+heroes}.json` were **regenerated with real data** (`enrich_tract.py --input
+candidates.base.json --states CA,OK --with-downloads` → `score_candidates.py`).
+Results — the two zero-coverage gaps are closed:
+- **drinking_water 1,303/1,303** (was 0; 76 distinct values, EPA CWS service areas)
+- **hospitals 1,303/1,303** (was 0; 0–13 within 5 mi, USGS National Map layer 14)
+- **population_1mi 1,303/1,303** (true 1-mile areal interpolation; median 241 vs the
+  tract proxy's 3,092 — the proxy was over-counting rural tracts, see §2.4)
+- **eji_rank 953/1,303** (CDC EJI 2022; SVI proxy fills the remainder)
+- top candidate now scores on **all 9 metrics with zero renormalization**;
+  **1,299/1,303 candidates changed rank** vs the pre-enrichment order.
+
+Endpoint/robustness fixes were required to make the live run succeed: hospitals
+switched from the (dead/partial) HIFLD mirrors to USGS National Map structures
+layer 14 + graceful failure; EJI fields are lowercase (`geoid`/`rpl_eji`/
+`stateabbr`); PWS auto-falls-back to the anon FeatureServer (GDAL can't read the
+570 MB zip); CEJST→CloudFront mirror, TIGER2025, ACS 2023.
+
+**Still NOT run live:** the §1.3 state-registry consolidation (OH/WV/PA/NY/KY) —
+`state_registries.py` + `build_datastore.py --states` remain **code-complete +
+unit-tested but unexecuted**, so `lost_wells.json` is not yet materialized and the
+depth/operator/type attach + universe-expand has not happened. Note these are
+**Appalachia**, which does **not** overlap the CA/OK candidates above — so §1.3
+does not affect the current candidate scores (it widens/annotates the *documented*
+universe). §2.3's methane/plug-cost flatness is therefore **not** resolved by this
+run (it depends on §1.3 depth/type + §2B factors).
 
 ---
 
@@ -24,6 +53,8 @@ georeferenced hero topo, and any U-Net execution.
 | Full app + U-Net as documented code | ✅ | U-Net documented + runnable, **not executed** (§2.5). |
 | Ingest-once-then-serve-from-cache | ✅ | App reads committed `data/processed/*.json`; no backend. |
 | Wire swarm to `ANTHROPIC_API_KEY` from env, cached fallback | ✅ | Ran live on 12 wells; 12/12 complete, avg 8 cited sources. |
+| §1.3 state-registry consolidation (depth/type/status/operator + expand) | ✅ code | `state_registries.py` (OH/WV/PA/NY/KY, config-driven) + `consolidate()` (attach by API → spatial ≤50 m → expand). **Awaiting live ingest run.** |
+| §2A tract-dedup enrichment (drinking water, hospitals, 1-mi pop, EJ) | ✅ **ran live** | `tracts.py` PIP + `enrich_tract.py` (PWS/USGS-hospitals/ACS-BG/CEJST/EJI). **Executed on all 1,303 CA/OK candidates** → drinking_water 1,303/1,303, hospitals 1,303/1,303, population_1mi 1,303/1,303, eji_rank 953/1,303; data regenerated. |
 
 **Genuinely real and working:** the 117,672-well backbone; the 1,303 detected
 candidates; the SVI/NCES proximity joins; the transparent composite scorer with
@@ -44,14 +75,19 @@ via the official SDK with **streaming** (server-side web search holds the HTTP
 connection open while searching; non-streaming got idle-dropped by the egress
 proxy and hung). Faithful to the architecture, not the letter of the client choice.
 
-### 2.2 Human-exposure metrics are incomplete (the biggest gap)
+### 2.2 Human-exposure metrics — was the biggest gap, now closed live
 The composite weights **drinking-water proximity at 13%** and **hospitals at 5%** —
 together 18% of the design, and drinking water is the single largest exposure
-sub-weight and the heart of the Vowinckel story. **Neither is computed.** The
-HIFLD hospitals layer probe failed and EPA SDWIS service-area joins are heavy, so
-the scorer renormalizes those two weights out **uniformly** (honest, and flagged
-in the UI), but it means the product does not yet measure drinking-water risk at
-all. **0 of 1,303 candidates** have a hospitals or drinking-water value.
+sub-weight and the heart of the Vowinckel story. As originally built, **neither was
+computed**: the HIFLD hospitals layer probe failed and EPA SDWIS service-area joins
+are heavy, so the scorer renormalized those two weights out uniformly — **0 of
+1,303 candidates** had a hospitals or drinking-water value.
+
+> **RESOLVED LIVE (§2A):** `enrich_tract.py` was run on the CA/OK candidates and now
+> populates **drinking_water 1,303/1,303** (EPA CWS service-area PIP; 76 distinct
+> values) and **hospitals 1,303/1,303** (USGS National Map structures layer 14,
+> nearest-feature; 0–13 within 5 mi). `score_candidates.py` reads both, so the two
+> weights **no longer renormalize out** — the top candidate scores on all 9 metrics.
 
 ### 2.3 The candidate ranking is driven by 4 metrics, not 9
 Undocumented detections carry no type/depth/status, so three sub-metrics are
@@ -66,6 +102,12 @@ actual ordering comes almost entirely from **population, schools, SVI, and EJ**
 read the per-well methane/plug-cost figures as well-specific when they are template
 estimates. They are labeled "modeled estimate," but the uniformity isn't surfaced.
 
+> **Partially resolved in code (§1.3):** documented/hero wells now inherit real
+> `depth_ft` (de-flattens plug cost via `plugcost.py`'s depth factor) and
+> `type_norm`/`status_norm` from state registries. LBNL undocumented detections
+> still carry no type/depth/status by nature — the flatness there is intrinsic
+> until a detection is matched to a registry well.
+
 ### 2.4 Source/precision compromises in the metrics
 - **Population is tract-level** (CDC SVI `E_TOTPOP`), presented as "population
   nearby." For a large rural tract this can badly mis-estimate a true 1-mile count;
@@ -73,6 +115,13 @@ estimates. They are labeled "modeled estimate," but the uniformity isn't surface
 - **EJ is a SVI-derived proxy** — `mean(poverty %, minority %)`, mirroring
   EJScreen's demographic index — not the **PEDP EJScreen** mirror the spec
   preferred. Disclosed in the UI, but a deviation.
+
+> **RESOLVED LIVE (§2A):** `enrich_tract.py` was run and now provides true 1-mi
+> population (block-group areal interpolation over ACS5; **1,303/1,303**, median 241
+> vs the tract proxy's 3,092 — the proxy was over-counting rural tracts) and the real
+> EJ signal (`cejst_disadvantaged` Justice40 + `eji_rank` CDC EJI, **953/1,303**,
+> SVI proxy fills the rest), tract-joined on FIPS. `score_candidates.py` now uses
+> `population_1mi`/`eji_rank` in place of the old proxies for the CA/OK candidates.
 
 ### 2.5 Hero wells: approximate coordinates, placeholder citations, generic topo
 - **Coordinates were estimated from memory**, not geocoded from authoritative

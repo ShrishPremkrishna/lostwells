@@ -24,7 +24,9 @@ from tqdm import tqdm
 ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw" / "tiger"
 
-TIGER = "https://www2.census.gov/geo/tiger/TIGER2024"
+# HANDOFF §2A: TIGER2025 (posted 2025-09-22) is primary; 2024 is the fallback.
+TIGER_BASE = "https://www2.census.gov/geo/tiger"
+TIGER_YEARS = ("2025", "2024")
 
 # 2-digit state FIPS for the state abbreviations we ingest.
 STATE_FIPS = {
@@ -41,14 +43,39 @@ STATE_FIPS = {
 FIPS_STATE = {v: k for k, v in STATE_FIPS.items()}
 
 
-def _zip_url(fips: str, kind: str) -> str:
+def _zip_url(fips: str, kind: str, year: str) -> str:
     sub = "TRACT" if kind == "tract" else "BG"
     name = "tract" if kind == "tract" else "bg"
-    return f"{TIGER}/{sub}/tl_2024_{fips}_{name}.zip"
+    return f"{TIGER_BASE}/TIGER{year}/{sub}/tl_{year}_{fips}_{name}.zip"
+
+
+def _fetch_one(fips: str, kind: str, dest: Path) -> bool:
+    """Try each TIGER year in turn; write the first that succeeds to ``dest``."""
+    for year in TIGER_YEARS:
+        url = _zip_url(fips, kind, year)
+        try:
+            with requests.get(url, stream=True, timeout=300) as r:
+                if r.status_code != 200:
+                    continue
+                total = int(r.headers.get("content-length", 0))
+                with open(dest, "wb") as f, tqdm(
+                    total=total, unit="B", unit_scale=True,
+                    desc=f"  tl_{year}_{fips}_{kind}") as bar:
+                    for chunk in r.iter_content(chunk_size=1 << 16):
+                        f.write(chunk)
+                        bar.update(len(chunk))
+            return True
+        except Exception as e:  # noqa: BLE001 — try the next year
+            print(f"[tiger] {year} {fips} {kind} failed: {e}")
+            continue
+    return False
 
 
 def download_tiger(states: list[str], kind: str = "tract") -> list[Path]:
-    """Fetch + cache TIGER tract/BG zips for each state. Idempotent."""
+    """Fetch + cache TIGER tract/BG zips for each state. Idempotent.
+
+    Tries TIGER2025 first, falling back to TIGER2024 per HANDOFF §2A.
+    """
     RAW.mkdir(parents=True, exist_ok=True)
     paths = []
     for st in states:
@@ -56,20 +83,14 @@ def download_tiger(states: list[str], kind: str = "tract") -> list[Path]:
         if not fips:
             print(f"[tiger] no FIPS for {st}; skip")
             continue
-        dest = RAW / f"tl_2024_{fips}_{kind}.zip"
+        dest = RAW / f"tl_{fips}_{kind}.zip"
         paths.append(dest)
         if dest.exists() and dest.stat().st_size > 0:
             print(f"[skip] {dest.relative_to(ROOT)} ({dest.stat().st_size/1e6:.1f} MB)")
             continue
-        url = _zip_url(fips, kind)
         print(f"[get ] {dest.relative_to(ROOT)}")
-        with requests.get(url, stream=True, timeout=300) as r:
-            r.raise_for_status()
-            total = int(r.headers.get("content-length", 0))
-            with open(dest, "wb") as f, tqdm(total=total, unit="B", unit_scale=True) as bar:
-                for chunk in r.iter_content(chunk_size=1 << 16):
-                    f.write(chunk)
-                    bar.update(len(chunk))
+        if not _fetch_one(fips, kind, dest):
+            print(f"[tiger] all years failed for {st} {kind}")
     return paths
 
 
@@ -82,7 +103,7 @@ def load_polygons(states: list[str], kind: str = "tract") -> gpd.GeoDataFrame:
         fips = STATE_FIPS.get(st.upper())
         if not fips:
             continue
-        zpath = RAW / f"tl_2024_{fips}_{kind}.zip"
+        zpath = RAW / f"tl_{fips}_{kind}.zip"
         if not zpath.exists():
             continue
         g = gpd.read_file(f"zip://{zpath}")

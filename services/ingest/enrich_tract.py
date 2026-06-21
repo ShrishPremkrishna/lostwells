@@ -52,20 +52,33 @@ RAW = ROOT / "data" / "raw" / "enrich"
 CACHE_DB = ROOT / "data" / "cache" / "enrich_tract.sqlite"
 METRIC_CRS = "EPSG:5070"  # CONUS Albers (meters)
 
-# --- source URLs (light budget) ------------------------------------------
-PWS_URL = ("https://www.epa.gov/sites/default/files/2021-06/"
-           "pws_boundaries_latest.zip")  # ~570 MB CWS service areas
-HOSPITALS_URL = ("https://services1.arcgis.com/Hp6G80Pky0om7QvQ/arcgis/rest/"
-                 "services/Hospitals_1/FeatureServer/0/query")  # HIFLD points
-CEJST_CSV_URL = ("https://static-data-screeningtool.geoplatform.gov/"
-                 "data-versions/2.0/data/score/downloadable/2.0-communities.csv")
-EJI_URL = ("https://onemap.cdc.gov/OneMapServices/rest/services/EJI/"
-           "CDC_ATSDR_EJI_2024/FeatureServer/0/query")
+# --- source URLs (HANDOFF §2A verified-live, light budget) ---------------
+# Drinking water: EPA CWS service-area boundaries. GitHub raw zip is primary
+# (~570 MB); anon ArcGIS FeatureServer is the fallback (44,615 CWS).
+PWS_URL = ("https://github.com/USEPA/ORD_SAB_Model/raw/refs/heads/main/"
+           "Version_History/PWS_Boundaries_Latest.zip")
+PWS_FALLBACK_FS = ("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/"
+                   "services/Water_System_Boundaries/FeatureServer/0/query")
+# USGS National Map "structures" layer 14 = Hospitals/Medical Centers — the
+# authoritative national, weekly-updated source. (The HIFLD ArcGIS mirrors are
+# dead/partial: the old geoplatform layer 404s, one mirror is Canada-only, the
+# NASA NCCS archive times out — so we use USGS, which PROGRESS §2.2 flagged the
+# 5% hospitals gap on.)
+HOSPITALS_URL = ("https://carto.nationalmap.gov/arcgis/rest/services/"
+                 "structures/MapServer/14/query")  # field: name; pts EPSG:4326
+# CEJST / Justice40 — PEDP CloudFront mirror (federal *.geoplatform.gov is
+# DNS-DEAD after the 2025 takedown).
+CEJST_CSV_URL = ("https://dblew8dgr6ajz.cloudfront.net/data-versions/2.0/"
+                 "data/score/downloadable/2.0-communities.csv")
+# CDC/ATSDR EJI — still official & live; the most reliable EJ source now.
+# Base is lowercase /onemapservices/ and the Hosted 2022 service.
+EJI_URL = ("https://onemap.cdc.gov/onemapservices/rest/services/Hosted/"
+           "Environmental_Justice_Index_2022_Hosted/FeatureServer/0/query")
 
 MILE_M = 1609.34
 HOSP_RADIUS_M = 5 * MILE_M
 
-ACS_BASE = "https://api.census.gov/data/2022/acs/acs5"
+ACS_BASE = "https://api.census.gov/data/2023/acs/acs5"
 ACS_KEY = os.environ.get("CENSUS_API_KEY", "")
 
 
@@ -100,18 +113,66 @@ def _download(url: str, dest: Path) -> Path:
 
 
 # --- drinking-water service areas (PWS) ----------------------------------
-def load_pws(with_downloads: bool) -> Optional[gpd.GeoDataFrame]:
+def _load_pws_fallback(with_downloads: bool, bbox: Optional[tuple] = None
+                       ) -> Optional[gpd.GeoDataFrame]:
+    """Anon ArcGIS FeatureServer fallback (44,615 CWS) when the zip is absent."""
+    dest = RAW / "pws_boundaries_fs.geojson"
+    if dest.exists() and dest.stat().st_size > 0:
+        return gpd.read_file(dest)
+    if not with_downloads:
+        return None
+    params = {
+        "where": "1=1", "outFields": "PWSID,PWS_Name,Population_Served_Count",
+        "outSR": "4326", "returnGeometry": "true", "f": "geojson",
+        "resultRecordCount": 2000,
+    }
+    if bbox:
+        params.update({
+            "geometry": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
+            "geometryType": "esriGeometryEnvelope", "inSR": "4326",
+            "spatialRel": "esriSpatialRelIntersects",
+        })
+    feats: list = []
+    offset = 0
+    sess = requests.Session()
+    while True:
+        params["resultOffset"] = offset
+        try:
+            r = sess.get(PWS_FALLBACK_FS, params=params, timeout=180)
+            r.raise_for_status()
+            page = r.json().get("features", [])
+        except Exception as e:  # noqa: BLE001
+            print(f"[pws] FeatureServer fallback failed: {e}")
+            break
+        feats.extend(page)
+        if len(page) < params["resultRecordCount"]:
+            break
+        offset += len(page)
+    if not feats:
+        return None
+    g = gpd.GeoDataFrame.from_features(feats, crs="EPSG:4326")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    g.to_file(dest, driver="GeoJSON")
+    return g
+
+
+def load_pws(with_downloads: bool, bbox: Optional[tuple] = None
+             ) -> Optional[gpd.GeoDataFrame]:
     dest = RAW / "pws_boundaries_latest.zip"
     if not dest.exists():
         if not with_downloads:
             print("[pws] not cached; pass --with-downloads to fetch (570MB)")
-            return None
-        _download(PWS_URL, dest)
+            return _load_pws_fallback(with_downloads, bbox)
+        try:
+            _download(PWS_URL, dest)
+        except Exception as e:  # noqa: BLE001
+            print(f"[pws] GitHub zip failed ({e}); trying FeatureServer fallback")
+            return _load_pws_fallback(with_downloads, bbox)
     try:
         g = gpd.read_file(f"zip://{dest}")
     except Exception as e:  # noqa: BLE001
-        print(f"[pws] read failed: {e}")
-        return None
+        print(f"[pws] read failed: {e}; trying FeatureServer fallback")
+        return _load_pws_fallback(with_downloads, bbox)
     if str(g.crs).upper() != "EPSG:4326":
         g = g.to_crs("EPSG:4326")
     return g
@@ -156,16 +217,22 @@ def drinking_water_scores(wells: gpd.GeoDataFrame, pws: gpd.GeoDataFrame) -> dic
 # --- hospitals (point nearest) -------------------------------------------
 def load_hospitals(with_downloads: bool, bbox: Optional[tuple] = None
                    ) -> Optional[gpd.GeoDataFrame]:
-    """Fetch hospital points (HIFLD ArcGIS), cached to a local GeoJSON."""
+    """Fetch hospital points (USGS National Map), cached to a local GeoJSON.
+
+    Hospitals are only 5% of the score and the public layers are historically
+    flaky, so any fetch error degrades gracefully to ``None`` (the metric
+    renormalizes out) rather than crashing the whole enrichment.
+    """
     dest = RAW / "hospitals.geojson"
     if dest.exists() and dest.stat().st_size > 0:
         return gpd.read_file(dest)
     if not with_downloads:
         print("[hospitals] not cached; pass --with-downloads to fetch")
         return None
+    PAGE = 2000  # = layer 14 maxRecordCount
     params = {
-        "where": "1=1", "outFields": "NAME,STATE,TYPE", "outSR": "4326",
-        "returnGeometry": "true", "f": "geojson", "resultRecordCount": 4000,
+        "where": "1=1", "outFields": "*", "outSR": "4326",
+        "returnGeometry": "true", "f": "geojson", "resultRecordCount": PAGE,
     }
     if bbox:
         params.update({
@@ -173,19 +240,22 @@ def load_hospitals(with_downloads: bool, bbox: Optional[tuple] = None
             "geometryType": "esriGeometryEnvelope", "inSR": "4326",
             "spatialRel": "esriSpatialRelIntersects",
         })
-    feats = []
+    feats: list = []
     offset = 0
     sess = requests.Session()
-    while True:
-        params["resultOffset"] = offset
-        r = sess.get(HOSPITALS_URL, params=params, timeout=120)
-        r.raise_for_status()
-        payload = r.json()
-        page = payload.get("features", [])
-        feats.extend(page)
-        if len(page) < params["resultRecordCount"]:
-            break
-        offset += len(page)
+    try:
+        while True:
+            params["resultOffset"] = offset
+            r = sess.get(HOSPITALS_URL, params=params, timeout=120)
+            r.raise_for_status()
+            page = r.json().get("features", [])
+            feats.extend(page)
+            if len(page) < PAGE:
+                break
+            offset += len(page)
+    except Exception as e:  # noqa: BLE001 — degrade, don't crash the pipeline
+        print(f"[hospitals] fetch failed ({e}); skipping (metric renormalizes out)")
+        return None
     if not feats:
         return None
     g = gpd.GeoDataFrame.from_features(feats, crs="EPSG:4326")
@@ -219,7 +289,7 @@ def hospital_proximity(wells: gpd.GeoDataFrame, hosp: gpd.GeoDataFrame) -> dict:
 
 # --- true 1-mile population via BG areal interpolation -------------------
 def _acs_bg_population(states: list[str]) -> dict:
-    """12-digit BG GEOID -> ACS5 2022 total population (B01003_001E)."""
+    """12-digit BG GEOID -> ACS5 2023 total population (B01003_001E)."""
     if not ACS_KEY:
         print("[acs] CENSUS_API_KEY not set; population_1mi will be skipped")
         return {}
@@ -314,11 +384,12 @@ def load_eji(states: list[str], with_downloads: bool) -> dict:
         return {}
     sess = requests.Session()
     out: dict = {}
+    PAGE = 2000  # = EJI layer maxRecordCount (lowercase, PostgreSQL-backed)
     for st in states:
         params = {
-            "where": f"StateAbbr='{st}'",
-            "outFields": "GEOID,RPL_EJI", "returnGeometry": "false",
-            "f": "json", "resultRecordCount": 5000,
+            "where": f"stateabbr='{st}'",
+            "outFields": "geoid,rpl_eji", "returnGeometry": "false",
+            "f": "json", "resultRecordCount": PAGE,
         }
         offset = 0
         while True:
@@ -332,11 +403,11 @@ def load_eji(states: list[str], with_downloads: bool) -> dict:
                 break
             for ft in feats:
                 a = ft.get("attributes", {})
-                g = a.get("GEOID")
-                v = a.get("RPL_EJI")
+                g = a.get("geoid")
+                v = a.get("rpl_eji")
                 if g is not None and v not in (None, -999):
                     out[str(g).zfill(11)] = round(float(v), 4)
-            if len(feats) < params["resultRecordCount"]:
+            if len(feats) < PAGE:
                 break
             offset += len(feats)
     print(f"[eji] loaded {len(out):,} tract EJI ranks")
@@ -369,11 +440,11 @@ def run(input_file: str = "lost_wells.json", states: Optional[list[str]] = None,
     # --- proximity metrics (point-keyed) ---------------------------------
     dw_scores: dict = {}
     hosp: dict = {}
-    pws = load_pws(with_downloads)
-    if pws is not None:
-        dw_scores = drinking_water_scores(wells, pws)
     bbox = (float(df["lon"].min()), float(df["lat"].min()),
             float(df["lon"].max()), float(df["lat"].max()))
+    pws = load_pws(with_downloads, bbox=bbox)
+    if pws is not None:
+        dw_scores = drinking_water_scores(wells, pws)
     hospitals = load_hospitals(with_downloads, bbox=bbox)
     if hospitals is not None and not hospitals.empty:
         hosp = hospital_proximity(wells, hospitals)
