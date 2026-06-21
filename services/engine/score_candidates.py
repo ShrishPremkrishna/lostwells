@@ -28,8 +28,24 @@ PROC = ROOT / "data" / "processed"
 STATE_COST_INDEX = {"CA": 1.25, "AK": 1.4}
 
 
-def build_record(base: dict, enrich: dict | None) -> dict:
-    methane = estimate_methane(plugged=bool(base.get("is_plugged")))
+def build_record(base: dict, enrich: dict | None, se: dict | None = None) -> dict:
+    # Status honesty (§2B): undocumented candidates have genuinely unknown
+    # status, so treat status as None to fire the unplugged/plugged blend + the
+    # "undifferentiated" badge. This does NOT mutate base["is_plugged"], so
+    # plug_cost (which keys off the raw flag) is untouched.
+    status_norm = base.get("status_norm")
+    plugged = (None if status_norm in (None, "undocumented", "unknown")
+               else bool(base.get("is_plugged")))
+
+    se_rec = se or {}
+    methane = estimate_methane(
+        plugged=plugged,
+        state_abbr=base.get("state_abbr"),
+        well_type=base.get("type_norm"),
+        super_emitter=se_rec.get("super_emitter"),
+        super_emitter_dist_m=se_rec.get("super_emitter_dist_m"),
+        super_emitter_rate_kg_hr=se_rec.get("super_emitter_rate_kg_hr"),
+    )
     plug = estimate_plug_cost(
         type_norm=base.get("type_norm", "unknown"),
         depth_ft=base.get("depth_ft"),
@@ -54,7 +70,10 @@ def build_record(base: dict, enrich: dict | None) -> dict:
         "svi": e.get("svi"),
         # Real EJ signal from EJI/CEJST when present (§2A); else the SVI-derived proxy.
         "ej": e.get("eji_rank") if e.get("eji_rank") is not None else e.get("ej"),
-        "methane": methane.t_co2e_gwp100_point,
+        # Scored scalar (§2B): a super-emitter-flagged well uses our own modeled
+        # right-tail anchor (not an invented measurement); else the point.
+        "methane": (methane.t_co2e_gwp100_high if methane.super_emitter
+                    else methane.t_co2e_gwp100_point),
         "plug_cost": plug.point_usd,
         "program_match": scoring.program_match_score(base.get("state_abbr")),
     }
@@ -79,8 +98,18 @@ def main() -> None:
     if hero_base:
         print(f"[score] folding in {len(hero_base)} hero wells")
 
-    cand = [build_record(b, cand_enrich.get(b["well_id"])) for b in cand_base]
-    heroes = [build_record(b, hero_enrich.get(b["well_id"])) for b in hero_base]
+    # §2B EPA super-emitter sidecars (well_id -> flags); absent -> no flags.
+    cand_se = _load("super_emitter.json") or {}
+    hero_se = _load("heroes.super_emitter.json") or {}
+    n_se = sum(1 for v in cand_se.values() if v.get("super_emitter"))
+    if cand_se or hero_se:
+        print(f"[score] super-emitter flags: {n_se} candidates, "
+              f"{sum(1 for v in hero_se.values() if v.get('super_emitter'))} heroes")
+
+    cand = [build_record(b, cand_enrich.get(b["well_id"]), cand_se.get(b["well_id"]))
+            for b in cand_base]
+    heroes = [build_record(b, hero_enrich.get(b["well_id"]), hero_se.get(b["well_id"]))
+              for b in hero_base]
 
     # Score candidates + heroes together so percentiles share one distribution.
     combined = scoring.score_set(cand + heroes)

@@ -201,6 +201,23 @@ export function DossierPanel({
         {/* methane */}
         <motion.div variants={item}>
           <Card title="Methane proxy" accent="#9ca3af">
+            {(m.differentiated === false || m.super_emitter) && (
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {m.differentiated === false && (
+                  <span className="rounded bg-ember/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ember-soft">
+                    Undifferentiated estimate
+                  </span>
+                )}
+                {m.super_emitter && (
+                  <span className="rounded bg-ember/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ember-soft">
+                    EPA super-emitter nearby
+                    {m.super_emitter_dist_m != null
+                      ? ` · ${(m.super_emitter_dist_m / 1000).toFixed(1)} km`
+                      : ""}
+                  </span>
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <Stat
                 label="Emission rate"
@@ -213,6 +230,13 @@ export function DossierPanel({
                 sub={`${m.t_co2e_gwp20_point} t/yr at GWP-20`}
               />
             </div>
+            {(m.region || m.well_type) && (
+              <p className="mt-2 text-[10px] text-ink-500">
+                {m.region}
+                {m.region && m.well_type ? " · " : ""}
+                {m.well_type}
+              </p>
+            )}
             <p className="mt-2 text-[10px] text-ink-500">{m.label}</p>
           </Card>
         </motion.div>

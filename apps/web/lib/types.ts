@@ -11,6 +11,14 @@ export interface Methane {
   t_co2e_gwp20_point: number;
   plugged: boolean;
   label: string;
+  // §2B region × status × type differentiation metadata (all optional).
+  region?: string;
+  well_type?: string;
+  status_known?: boolean;
+  differentiated?: boolean;
+  super_emitter?: boolean | null;
+  super_emitter_dist_m?: number | null;
+  super_emitter_rate_kg_hr?: number | null;
 }
 
 export interface PlugCost {
@@ -142,7 +150,7 @@ export const METRIC_LABELS: Record<string, string> = {
   drinking_water: "Drinking-water proximity",
   svi: "Social Vulnerability",
   ej: "Environmental-justice burden",
-  methane: "Methane proxy (modeled)",
+  methane: "Methane (modeled, region/type)",
   fundability_cost: "Low plug cost (tractable)",
   program_match: "Funding-program match",
 };

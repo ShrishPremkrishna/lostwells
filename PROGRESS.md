@@ -92,7 +92,17 @@ are heavy, so the scorer renormalized those two weights out uniformly — **0 of
 ### 2.3 The candidate ranking is driven by 4 metrics, not 9
 Undocumented detections carry no type/depth/status, so three sub-metrics are
 effectively constant across all 1,303 candidates:
-- **Methane proxy:** **1 distinct value** (8.147 t CO₂e/yr) for *every* candidate.
+- **Methane proxy:** ~~**1 distinct value** (8.147 t CO₂e/yr)~~ → **§2B rebuilt the
+  engine** to differentiate by region × status × type (EPA GHGI × Kang 2016).
+  For the **attributed** universe this breaks the tie: heroes now span
+  **0.079 / 8.034 / 12.352 t CO₂e/yr** (oil / OH-unknown / PA-gas) instead of one
+  collapsed value. The 1,303 CA/OK candidates share region=`rest_us`,
+  type=`unknown`, status=unknown, so they remain near-uniform — but at an
+  **honest ~1.82 t blend** (0.69·unplugged + 0.31·plugged) carrying an explicit
+  `differentiated=false` flag + UI "undifferentiated estimate" badge, rather than
+  a falsely-precise single constant. The only per-candidate tiebreaker is a nearby
+  EPA Super-Emitter event (cross-referenced live in §2B; **0 CA/OK matches** —
+  the program is sparse and in deregulatory delay — handled gracefully).
 - **Plug cost:** **2 values** ($76k, or $95k in CA via a state cost index).
 - **Program match:** **1 value** (1.0).
 
@@ -100,13 +110,17 @@ So methane (15%) and fundability (20%) contribute a near-constant offset, and th
 actual ordering comes almost entirely from **population, schools, SVI, and EJ**
 (the four real enrichment signals). This is honest in the code, but a viewer could
 read the per-well methane/plug-cost figures as well-specific when they are template
-estimates. They are labeled "modeled estimate," but the uniformity isn't surfaced.
+estimates. They are labeled "modeled estimate," and (post-§2B) the methane
+uniformity **is now surfaced** via the `differentiated=false` candor flag/badge.
 
-> **Partially resolved in code (§1.3):** documented/hero wells now inherit real
-> `depth_ft` (de-flattens plug cost via `plugcost.py`'s depth factor) and
-> `type_norm`/`status_norm` from state registries. LBNL undocumented detections
-> still carry no type/depth/status by nature — the flatness there is intrinsic
-> until a detection is matched to a registry well.
+> **Partially resolved in code (§1.3 + §2B):** documented/hero wells now inherit
+> real `depth_ft` (de-flattens plug cost via `plugcost.py`'s depth factor) and
+> `type_norm`/`status_norm` from state registries; **§2B** then differentiates
+> their methane by region/status/type. LBNL undocumented detections still carry no
+> type/depth/status by nature — the methane flatness there is intrinsic until a
+> detection is matched to a registry well, but it is no longer **hidden**: the
+> blend is modeled-not-measured, badged "undifferentiated," and the only
+> per-candidate signal (EPA super-emitter proximity) is cross-referenced.
 
 ### 2.4 Source/precision compromises in the metrics
 - **Population is tract-level** (CDC SVI `E_TOTPOP`), presented as "population
