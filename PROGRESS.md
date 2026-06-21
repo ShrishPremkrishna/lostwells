@@ -4,61 +4,24 @@
 > about data limits is a feature, not a footnote — this file is meant to be read
 > alongside the demo, so no number here is mistaken for more than it is.
 
-**Status:** full app built end-to-end on `main` (7 commits), working tree clean.
-Builds compile; the live agent swarm ran on real data with the provided API key.
-**Not yet done:** in-browser visual QA, real georeferenced hero topo, and any
-U-Net execution.
+**Status:** full app built end-to-end; candidate universe expanded to **~38,222**
+(LBNL CA/OK 1,303 + U-Net Appalachia 36,919) and the §2A tract-dedup
+human-exposure/EJ enrichment ran live, regenerating
+`data/processed/{enrichment,candidates.scored,heroes}.json` with real data
+(drinking_water / hospitals / population_1mi at full coverage; eji_rank 953/1,303;
+25 engine tests green). The live agent swarm ran on real data with the provided
+API key.
 
-**Update (U-Net Appalachia ingest RAN LIVE — candidate universe now ~38.2k):**
-`services/ingest/build_unet_candidates.py` is a standalone stage run **after**
-`build_datastore.py`. It converts the U-Net detection GeoJSON
-(`full_data_core_appala.geojson`, 36,919 PA/KY/WV/OH wells) into the 17-field
-`candidates.base.json` schema and **merges** it onto the LBNL CA/OK 1,303
-(coexist → **38,222** total). Idempotent: it strips prior `unet_*` rows before
-each merge; the LBNL stage stays the sole writer of its own rows. Provenance is
-read from the nested `source_records[0].feature.properties` (the top-level props
-are an empty upstream bug); `quad_scale` is recovered via a
-`(quad,year,state)→USGS HTMC inventory` join (100% from inventory: 36,891 exact,
-27 ambiguous→24000, 1 default); `county_group` via an offline national-county
-PIP (100% hit, `Unknown_*` fallback otherwise); `nearest_doc_well_m` is recomputed
-nationally vs the documented universe (EPSG:5070). `score_candidates.py` re-scores
-the merged 38,222 with no engine change (25 engine tests green). Run order:
-```
-python services/ingest/build_datastore.py          # LBNL CA/OK (1,303)
-python services/ingest/build_unet_candidates.py    # + U-Net Appalachia (36,919) → merge → 38,222
-python services/engine/score_candidates.py         # re-scores merged universe
-```
-Out of scope here (follow-on phases): bulk offline tract-enrichment for the 38k,
-on-demand precise enrichment, and the columnar/virtualized web payload for 38k.
+**Not yet run live:** in-browser visual QA; real georeferenced hero topo; any
+U-Net execution (no GPU); the §1.3 state-registry consolidation (OH/WV/PA/NY/KY)
+remains code-complete + unit-tested but unexecuted — it annotates the *documented*
+universe, which does not overlap the CA/OK candidate scores, so §2.3's
+methane/plug-cost flatness is not resolved by the current run.
 
-**Update (§2A enrichment RAN LIVE on the CA/OK candidates — data regenerated):**
-the tract-dedup human-exposure/EJ enrichment (§2A) has now been **executed live**
-against all 1,303 candidates and `data/processed/{enrichment,candidates.scored,
-heroes}.json` were **regenerated with real data** (`enrich_tract.py --input
-candidates.base.json --states CA,OK --with-downloads` → `score_candidates.py`).
-Results — the two zero-coverage gaps are closed:
-- **drinking_water 1,303/1,303** (was 0; 76 distinct values, EPA CWS service areas)
-- **hospitals 1,303/1,303** (was 0; 0–13 within 5 mi, USGS National Map layer 14)
-- **population_1mi 1,303/1,303** (true 1-mile areal interpolation; median 241 vs the
-  tract proxy's 3,092 — the proxy was over-counting rural tracts, see §2.4)
-- **eji_rank 953/1,303** (CDC EJI 2022; SVI proxy fills the remainder)
-- top candidate now scores on **all 9 metrics with zero renormalization**;
-  **1,299/1,303 candidates changed rank** vs the pre-enrichment order.
-
-Endpoint/robustness fixes were required to make the live run succeed: hospitals
-switched from the (dead/partial) HIFLD mirrors to USGS National Map structures
-layer 14 + graceful failure; EJI fields are lowercase (`geoid`/`rpl_eji`/
-`stateabbr`); PWS auto-falls-back to the anon FeatureServer (GDAL can't read the
-570 MB zip); CEJST→CloudFront mirror, TIGER2025, ACS 2023.
-
-**Still NOT run live:** the §1.3 state-registry consolidation (OH/WV/PA/NY/KY) —
-`state_registries.py` + `build_datastore.py --states` remain **code-complete +
-unit-tested but unexecuted**, so `lost_wells.json` is not yet materialized and the
-depth/operator/type attach + universe-expand has not happened. Note these are
-**Appalachia**, which does **not** overlap the CA/OK candidates above — so §1.3
-does not affect the current candidate scores (it widens/annotates the *documented*
-universe). §2.3's methane/plug-cost flatness is therefore **not** resolved by this
-run (it depends on §1.3 depth/type + §2B factors).
+> For the run-order commands and the slim-web-payload regeneration note, see
+> `README.md`, `CLAUDE.md`, and `docs/OVERVIEW.md`. The detailed deviation
+> log is preserved in `docs/archive/HANDOFF.md`. The sections below are the
+> honest per-area self-audit.
 
 ---
 
