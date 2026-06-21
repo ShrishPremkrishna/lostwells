@@ -111,8 +111,42 @@ export function DossierPanel({
             onClick={onTopoDissolve}
             className="mt-3 w-full rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-[12px] font-semibold text-danger transition-colors hover:bg-danger/20"
           >
-            ◐ Reveal {c.hero?.topo?.year ?? "historical"} topo → today
+            ◐ Reveal historical topo → today
           </button>
+        )}
+
+        {c.hero?.citations && c.hero.citations.length > 0 && (
+          <div className="mt-3">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-500">
+              Sources
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {c.hero.citations.map((src, i) => (
+                <a
+                  key={i}
+                  href={src.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-ink-300 hover:border-ember/40 hover:text-ember-soft"
+                >
+                  {src.title.slice(0, 40)}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {c.coord_precision && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {c.coord_precision === "community" && (
+              <span className="rounded bg-ember/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ember-soft">
+                Approximate location
+              </span>
+            )}
+            {c.coord_source && (
+              <span className="text-[10px] text-ink-500">Location: {c.coord_source}</span>
+            )}
+          </div>
         )}
 
         <div className="mt-4 flex items-center gap-4">

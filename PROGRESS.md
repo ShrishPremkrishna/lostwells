@@ -137,17 +137,28 @@ uniformity **is now surfaced** via the `differentiated=false` candor flag/badge.
 > SVI proxy fills the rest), tract-joined on FIPS. `score_candidates.py` now uses
 > `population_1mi`/`eji_rank` in place of the old proxies for the CA/OK candidates.
 
-### 2.5 Hero wells: approximate coordinates, placeholder citations, generic topo
-- **Coordinates were estimated from memory**, not geocoded from authoritative
-  addresses. The SVI/schools numbers shown for the hero wells depend on whatever
-  tract those approximate points land in — they could describe a neighbor tract.
-- **Hero citation URLs are placeholder homepages** (`pa.gov/dep`, `nrdc.org`,
-  `latimes.com`), not the actual press releases/articles. (The *swarm dossiers*,
-  by contrast, carry real web-search source URLs.)
-- The topo-dissolve "before" layer is ESRI `USA_Topo_Maps` (scanned USGS quads),
-  but the **vintage shown is whatever ESRI mosaics for that spot** — the "1953
-  topo" caption is aspirational, not a guaranteed match to that year's quad. The
-  spec wanted pre-built georeferenced HTMC tiles for the hero quads.
+### 2.5 Hero wells: coordinates, citations, topo — RESOLVED (authoritative-with-provenance)
+- **Coordinates are now authoritative-with-provenance.** Each hero carries
+  `coord_source` + `coord_precision` ("building" | "parcel" | "community"):
+  - Admiral King → US Census geocoder on the NCES CCD school address
+    (720 Washington Ave, Lorain OH; precision `building`).
+  - AllenCo → US Census geocoder on 814 W 23rd St, LA 90007 (St. James Drill
+    Site; precision `parcel`).
+  - Vowinckel → community centroid (residential bore not public); precision
+    `community`, surfaced in-app as an "Approximate location" badge.
+  The hero pipeline was re-run, so SVI/schools/tract now describe the corrected
+  point (Admiral King → Lorain County tract 39093…, AllenCo → LA tract
+  06037224420, Vowinckel → Clarion County tract 42031…).
+- **Hero citation URLs are now real** (PA DEP press release + exploreClarion;
+  WKYC + Fox 8; US EPA violations/penalty + National Catholic Reporter), and
+  `hero.citations` is **rendered** in the dossier header (previously defined but
+  never shown). Placeholder homepages removed.
+- **Topo labels relabeled honestly:** captions now read e.g. "USGS historical
+  topo · Clarion quad (1958 ed.) → today" and the topo modal carries a
+  disclaimer that the displayed sheet is ESRI's best-available scanned-quad
+  mosaic and may differ from the labeled edition. The topo button no longer
+  claims a guaranteed year. (Bundling real georeferenced HTMC GeoTIFFs is still
+  deferred — honest relabel chosen over fabricating an exact match.)
 
 ### 2.6 U-Net is documented but never executed or validated
 No GPU here (as planned), so `services/unet/infer.py` has **never run** — the
@@ -177,9 +188,12 @@ caveats. Several are already disclosed in-product; all are listed here for hones
    all candidates (§2.3). Risk: false precision. Mitigation in place: "modeled
    estimate" labels. Mitigation missing: explicitly showing that these are
    class-level defaults for undocumented wells.
-2. **Hero enrichment may describe the wrong place** because coordinates were
-   estimated (§2.5). Any population/SVI/school figure on a hero card should be
-   treated as indicative until the wells are geocoded to their real parcels.
+2. **Hero coordinates are now authoritative-with-provenance** (§2.5). Building/
+   parcel coords are geocoded from authoritative records (Census geocoder on NCES
+   school address / street address) and the pipeline was re-run so enrichment
+   matches the corrected location. Vowinckel stays community-level by necessity
+   (residential bore not public) and is badged "Approximate location" — honest by
+   construction. Each coord carries `coord_source`/`coord_precision`.
 3. **"Population nearby" ≠ population within 1 mile** (§2.4). Could over- or
    under-state exposure, especially rural — directly affects ranking.
 4. **EJ is a community-built proxy, not the federal tool** (§2.4). Defensible and
@@ -191,8 +205,10 @@ caveats. Several are already disclosed in-product; all are listed here for hones
    as leads to verify, not adjudicated fact. (The agent does correctly say "no
    operator on record" for genuinely undocumented wells — good — but specific
    historical claims still warrant a human check.)
-6. **Topo vintage labels are not guaranteed** (§2.5) — don't claim "this is the
-   1953 map" on stage without bundling the actual georeferenced quad.
+6. **Topo vintage labels no longer overclaim** (§2.5). Captions reference the quad
+   edition as context, and the topo modal disclaims that the displayed sheet is
+   ESRI's best-available scanned-quad mosaic (may differ from the labeled edition).
+   Bundling the actual georeferenced quad remains deferred.
 7. **LBNL count discrepancy:** 1,303 ingested rows vs 1,301 in the paper. Two extra
    could be duplicates or a parsing artifact; not de-duplicated/reconciled.
 8. **Scope honesty:** detection is CA+OK only. The "national" framing must be stated

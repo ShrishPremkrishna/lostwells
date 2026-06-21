@@ -105,8 +105,14 @@ export function TopoDissolve({ hero, onClose }: { hero: Candidate; onClose: () =
             <span className="block h-3 w-3 rounded-full bg-danger ring-2 ring-white" />
           </div>
           {/* labels */}
-          <div className="pointer-events-none absolute left-4 top-4 z-20 rounded-md bg-ink-950/70 px-2 py-1 text-[11px] font-medium text-paper">
-            {hero.hero?.topo?.label ?? "historical topo"}
+          <div className="pointer-events-none absolute left-4 top-4 z-20 max-w-xs rounded-md bg-ink-950/70 px-2 py-1 text-paper">
+            <div className="text-[11px] font-medium">
+              {hero.hero?.topo?.label ?? "historical topo"}
+            </div>
+            <div className="mt-0.5 text-[10px] text-paper/70">
+              Shown: ESRI USA_Topo scanned-quad mosaic — displayed vintage is
+              best-available and may differ from the labeled edition.
+            </div>
           </div>
           <div className="pointer-events-none absolute right-4 top-4 z-20 rounded-md bg-ink-950/70 px-2 py-1 text-[11px] font-medium text-paper">
             today — satellite

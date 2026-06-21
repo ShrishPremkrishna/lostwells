@@ -102,6 +102,8 @@ export interface Candidate {
   is_plugged: boolean;
   lat: number;
   lon: number;
+  coord_source?: string;
+  coord_precision?: string;
   nearest_doc_well_m?: number;
   methane: Methane;
   plug_cost: PlugCost;
