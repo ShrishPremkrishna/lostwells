@@ -299,7 +299,7 @@ See `COLAB_RUNBOOK.md` for the complete two-computer procedure.'''),
 Run one GPU notebook per free account. Each worker is restartable.'''),
         markdown('''## Final cross-state merge
 
-Run this after all state outputs are accessible from one Drive account. Set `STATE_OUTPUT_DIRS` to the four per-map directories, not the already-merged state files.'''),
+Run this after all state outputs are accessible from one Drive account. Set `STATE_OUTPUT_DIRS` to the four per-map directories, not the already-merged state files. The merged GeoJSON retains every original feature, exact source coordinate, property, scan ID, documented-well distance, and input filename under `source_records`.'''),
         code('''import os, subprocess, sys
 from pathlib import Path
 from google.colab import drive

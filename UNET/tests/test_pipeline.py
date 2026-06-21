@@ -59,7 +59,13 @@ class MergeTests(unittest.TestCase):
             feature(-80.0, 41.0, "C"),
         ], 60)
         self.assertEqual(len(merged), 2)
-        self.assertEqual(max(f["properties"]["detection_count"] for f in merged), 2)
+        duplicate = max(merged, key=lambda f: f["properties"]["detection_count"])
+        self.assertEqual(duplicate["properties"]["detection_count"], 2)
+        self.assertEqual(duplicate["properties"]["quads"], ["A", "B"])
+        self.assertEqual(len(duplicate["properties"]["source_records"]), 2)
+        self.assertEqual(duplicate["properties"]["source_coordinates"],
+                         [[-79.0, 41.0], [-79.0005, 41.0]])
+        self.assertEqual(duplicate["properties"]["documented_distances_m"], [150, 150])
 
 
 if __name__ == "__main__":
