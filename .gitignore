@@ -25,6 +25,7 @@ npm-debug.log*
 *.key
 
 # --- Data: commit processed datastore, ignore bulky raw + caches ---
+# (covers data/raw/htmc/*.csv USGS HTMC inventory + data/raw/tiger/*.zip county/tract caches)
 data/raw/
 data/cache/
 *.tif

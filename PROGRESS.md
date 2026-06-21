@@ -9,6 +9,28 @@ Builds compile; the live agent swarm ran on real data with the provided API key.
 **Not yet done:** in-browser visual QA, real georeferenced hero topo, and any
 U-Net execution.
 
+**Update (U-Net Appalachia ingest RAN LIVE — candidate universe now ~38.2k):**
+`services/ingest/build_unet_candidates.py` is a standalone stage run **after**
+`build_datastore.py`. It converts the U-Net detection GeoJSON
+(`full_data_core_appala.geojson`, 36,919 PA/KY/WV/OH wells) into the 17-field
+`candidates.base.json` schema and **merges** it onto the LBNL CA/OK 1,303
+(coexist → **38,222** total). Idempotent: it strips prior `unet_*` rows before
+each merge; the LBNL stage stays the sole writer of its own rows. Provenance is
+read from the nested `source_records[0].feature.properties` (the top-level props
+are an empty upstream bug); `quad_scale` is recovered via a
+`(quad,year,state)→USGS HTMC inventory` join (100% from inventory: 36,891 exact,
+27 ambiguous→24000, 1 default); `county_group` via an offline national-county
+PIP (100% hit, `Unknown_*` fallback otherwise); `nearest_doc_well_m` is recomputed
+nationally vs the documented universe (EPSG:5070). `score_candidates.py` re-scores
+the merged 38,222 with no engine change (25 engine tests green). Run order:
+```
+python services/ingest/build_datastore.py          # LBNL CA/OK (1,303)
+python services/ingest/build_unet_candidates.py    # + U-Net Appalachia (36,919) → merge → 38,222
+python services/engine/score_candidates.py         # re-scores merged universe
+```
+Out of scope here (follow-on phases): bulk offline tract-enrichment for the 38k,
+on-demand precise enrichment, and the columnar/virtualized web payload for 38k.
+
 **Update (§2A enrichment RAN LIVE on the CA/OK candidates — data regenerated):**
 the tract-dedup human-exposure/EJ enrichment (§2A) has now been **executed live**
 against all 1,303 candidates and `data/processed/{enrichment,candidates.scored,

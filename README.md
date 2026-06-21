@@ -30,7 +30,8 @@ python -m venv .venv && . .venv/bin/activate
 pip install -r services/ingest/requirements.txt -r services/engine/requirements.txt
 python services/ingest/download.py          # fetch raw sources
 python services/ingest/state_registries.py --states OH,WV,PA,NY,KY   # §1.3 depth/type/status/operator
-python services/ingest/build_datastore.py --states OH,WV,PA,NY,KY    # -> wells.documented.json, candidates.base.json, lost_wells.json
+python services/ingest/build_datastore.py --states OH,WV,PA,NY,KY    # -> wells.documented.json, candidates.base.json (LBNL CA/OK 1,303), lost_wells.json
+python services/ingest/build_unet_candidates.py                     # + U-Net Appalachia (36,919 PA/KY/WV/OH) -> merge into candidates.base.json (~38,222)
 python services/ingest/enrich.py            # CDC SVI + NCES joins (cached)
 # §2A tract-dedup enrichment (drinking water, hospitals, true 1-mi population, EJ).
 # Needs CENSUS_API_KEY for ACS block-group population; --with-downloads fetches
