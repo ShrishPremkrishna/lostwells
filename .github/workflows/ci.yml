@@ -1,0 +1,42 @@
+# Minimal CI: prove the two things a fresh clone must always satisfy —
+# (1) the pure-compute ranking engine is correct, and (2) the web app type-checks
+# and produces a production build from the committed datastore. Deliberately does
+# NOT run the ingest/swarm stages (they hit live federal APIs / spend credits).
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  engine-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install engine + geo deps
+        # geopandas/shapely let the 2 PIP-dependent tests run (else they skip).
+        run: pip install -r services/engine/requirements.txt -r services/ingest/requirements.txt
+      - name: Run engine unit tests
+        run: python -m pytest services/engine/tests -q
+
+  web-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - name: Type-check
+        run: npx tsc --noEmit
+      - name: Production build (prebuild copies the committed datastore)
+        run: npm run build
