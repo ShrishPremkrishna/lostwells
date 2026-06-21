@@ -42,13 +42,15 @@ def load_tiles(dirs: list[str]):
         raise SystemExit(f"[ft] no .npz tiles found in {dirs} (run make_labels.py)")
     X = np.empty((len(files), 256, 256, 3), dtype=np.float32)
     Y = np.empty((len(files), 256, 256, 1), dtype=np.float32)
+    groups = []
     for i, f in enumerate(files):
         z = np.load(f)
         X[i] = z["image"].astype("float32")
         Y[i, ..., 0] = z["mask"].astype("float32")
+        groups.append(str(z["quad"]) if "quad" in z else f.stem.rsplit("_", 2)[0])
     print(f"[ft] loaded {len(files)} tiles "
           f"({int((Y.sum(axis=(1,2,3))>0).sum())} contain wells)")
-    return X, Y
+    return X, Y, np.asarray(groups)
 
 
 def main() -> None:
@@ -70,15 +72,23 @@ def main() -> None:
     from tensorflow import keras
 
     preprocess = sm.get_preprocessing("resnet34")
-    X, Y = load_tiles(args.tiles)
+    X, Y, groups = load_tiles(args.tiles)
     X = preprocess(X)
 
-    # shuffle + split
+    # Split by whole quadrangle. Random tile splitting leaks overlapping pixels
+    # into both sets and inflates validation metrics.
     rng = np.random.default_rng(0)
-    idx = rng.permutation(len(X))
-    X, Y = X[idx], Y[idx]
-    n_val = int(len(X) * args.val_frac)
-    Xtr, Ytr, Xva, Yva = X[n_val:], Y[n_val:], X[:n_val], Y[:n_val]
+    unique_groups = rng.permutation(np.unique(groups))
+    if len(unique_groups) < 2:
+        raise SystemExit("[ft] need tiles from at least two quadrangles for a leakage-safe split")
+    n_val_groups = max(1, int(round(len(unique_groups) * args.val_frac)))
+    n_val_groups = min(n_val_groups, len(unique_groups) - 1)
+    val_groups = set(unique_groups[:n_val_groups])
+    is_val = np.array([g in val_groups for g in groups])
+    Xtr, Ytr, Xva, Yva = X[~is_val], Y[~is_val], X[is_val], Y[is_val]
+    print(f"[ft] split by quad: train={len(Xtr)} tiles / "
+          f"{len(unique_groups)-n_val_groups} quads; validation={len(Xva)} tiles / "
+          f"{n_val_groups} quads")
 
     model = keras.models.load_model(args.model, compile=False)
     loss = sm.losses.BinaryFocalLoss()                # gamma=2.0 (checkpoint default)

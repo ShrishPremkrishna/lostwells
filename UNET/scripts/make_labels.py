@@ -136,7 +136,8 @@ def process_quad(tif, xml, wlat, wlon, wyear, map_year, radius, neg_ratio, out_d
             if not has_well and rng.random() > neg_ratio:
                 continue
             stem = f"{tif.stem}_{ii}_{jj}"
-            np.savez_compressed(out_dir / f"{stem}.npz", image=im, mask=mk)
+            np.savez_compressed(out_dir / f"{stem}.npz", image=im, mask=mk,
+                                quad=tif.stem)
             n_pos += int(has_well)
             n_neg += int(not has_well)
     print(f"[labels] {tif.name}: {n_pos} positive + {n_neg} negative tiles "

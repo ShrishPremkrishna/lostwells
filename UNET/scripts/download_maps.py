@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download Appalachian HTMC topographic quads for U-Net training.
+"""Build a manifest and optionally download Appalachian HTMC topographic quads.
 
 Acquires georeferenced USGS Historical Topographic Map Collection (HTMC) GeoTIFFs
 filtered to the series the LBNL CATALOG model targets: **1:24,000 scale,
@@ -23,7 +23,7 @@ The inventory column order and the S3 layout were probed live; see
 Usage:
     python download_maps.py --states PA OH WV KY --out ../data/maps
     python download_maps.py --states PA --limit 25 --out ../data/maps   # small test
-    python download_maps.py --manifest-only --states PA OH WV KY        # list, don't download
+    python download_maps.py --manifest-only --latest-per-quad --states PA OH WV KY
 """
 from __future__ import annotations
 
@@ -89,7 +89,8 @@ def fetch_inventory(cache_dir: Path) -> Path:
 
 
 def filter_rows(csv_path: Path, state_names: set[str],
-                year_min: int, year_max: int) -> list[dict]:
+                year_min: int, year_max: int,
+                bbox: tuple[float, float, float, float] | None = None) -> list[dict]:
     """Stream the 184 MB CSV and keep the target series in the target states."""
     keep: list[dict] = []
     # The CSV has 43 columns; DictReader handles ordering by header.
@@ -110,8 +111,34 @@ def filter_rows(csv_path: Path, state_names: set[str],
                 continue
             if not row.get("geotiff_url"):
                 continue
+            if bbox is not None:
+                west, south, east, north = bbox
+                try:
+                    map_lon = (float(row["westbc"]) + float(row["eastbc"])) / 2
+                    map_lat = (float(row["southbc"]) + float(row["northbc"])) / 2
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if not (west <= map_lon <= east and south <= map_lat <= north):
+                    continue
             keep.append({k: row.get(k) for k in CSV_FIELDS_WE_NEED})
     return keep
+
+
+def latest_per_quad(rows: list[dict]) -> list[dict]:
+    """Keep the newest eligible edition for each state/map-name pair.
+
+    Historical editions are scientifically useful, but processing every edition
+    multiplies cost and yields many duplicate detections. The latest edition is a
+    practical first pass; older editions can be run as a later recovery pass.
+    """
+    latest: dict[tuple[str, str], dict] = {}
+    for row in rows:
+        key = (row["primary_state"], row["map_name"])
+        current = latest.get(key)
+        if current is None or int(row["date_on_map"]) > int(current["date_on_map"]):
+            latest[key] = row
+    return sorted(latest.values(), key=lambda r: (
+        r["primary_state"], r["map_name"], r["date_on_map"], r["scan_id"]))
 
 
 def write_manifest(rows: list[dict], out_dir: Path) -> Path:
@@ -190,6 +217,11 @@ def main() -> None:
                     help="dir to cache the HTMC inventory CSV")
     ap.add_argument("--year-min", type=int, default=YEAR_MIN)
     ap.add_argument("--year-max", type=int, default=YEAR_MAX)
+    ap.add_argument("--latest-per-quad", action="store_true",
+                    help="keep only the newest eligible edition per map name (recommended first pass)")
+    ap.add_argument("--bbox", nargs=4, type=float, default=None,
+                    metavar=("WEST", "SOUTH", "EAST", "NORTH"),
+                    help="optional lon/lat AOI; keep maps whose center falls inside")
     ap.add_argument("--limit", type=int, default=None,
                     help="cap number of quads (for a quick test)")
     ap.add_argument("--workers", type=int, default=6)
@@ -209,9 +241,16 @@ def main() -> None:
     cache_dir = Path(args.cache).resolve()
 
     csv_path = fetch_inventory(cache_dir)
-    rows = filter_rows(csv_path, state_names, args.year_min, args.year_max)
+    bbox = tuple(args.bbox) if args.bbox else None
+    if bbox and not (bbox[0] < bbox[2] and bbox[1] < bbox[3]):
+        sys.exit("[maps] invalid --bbox: expected WEST SOUTH EAST NORTH")
+    rows = filter_rows(csv_path, state_names, args.year_min, args.year_max, bbox)
     print(f"[maps] {len(rows)} quads match: scale {TARGET_SCALE}, '{TARGET_GRID}', "
           f"{args.year_min}-{args.year_max}, states={sorted(state_names)}")
+    if args.latest_per_quad:
+        before = len(rows)
+        rows = latest_per_quad(rows)
+        print(f"[maps] latest edition per quad: {before} -> {len(rows)} maps")
     if args.limit:
         rows = rows[:args.limit]
         print(f"[maps] limited to {len(rows)} quads")

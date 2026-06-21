@@ -16,6 +16,8 @@ Two uses in this project:
 Sources (all FREE, no key; endpoints reachability-probed 2026-06-20). Each state's
 master layer carries API#, lat/lon, type, status, operator; depth where noted.
 Output: one GeoJSON FeatureCollection per state in ``--out`` (EPSG:4326).
+Bulk shapefiles are converted automatically so every output can be passed to
+``infer.py`` and ``run_batch.py`` without a manual format-conversion step.
 
 Usage:
     python download_wells.py --states OH WV KY --out ../data/wells
@@ -159,10 +161,14 @@ def save_geojson(feats: list[dict], dest: Path) -> None:
     print(f"[wells] wrote {len(feats)} features -> {dest}")
 
 
-def fetch_shapefile_zip(url: str, dest_dir: Path, state: str,
-                        sess: requests.Session) -> None:
-    """Download a bulk shapefile ZIP and extract it (read later w/ geopandas)."""
-    dest_dir = dest_dir / f"{state}_shapefile"
+def fetch_shapefile_zip(url: str, out_dir: Path, state: str,
+                        sess: requests.Session) -> Path | None:
+    """Download a bulk shapefile ZIP and convert its points to EPSG:4326 GeoJSON."""
+    dest_dir = out_dir / f"{state}_shapefile"
+    geojson = out_dir / f"{state}.geojson"
+    if geojson.exists() and geojson.stat().st_size > 0:
+        print(f"[wells] {state}: skip (exists) -> {geojson}")
+        return geojson
     dest_dir.mkdir(parents=True, exist_ok=True)
     print(f"[wells] {state}: downloading shapefile {url}")
     try:
@@ -171,12 +177,24 @@ def fetch_shapefile_zip(url: str, dest_dir: Path, state: str,
     except Exception as e:  # noqa: BLE001
         print(f"[wells]   ERROR {state}: {e}\n"
               f"[wells]   (filename may be date-versioned or host down — see SOURCES notes)")
-        return
+        return None
     with zipfile.ZipFile(io.BytesIO(r.content)) as zf:
         zf.extractall(dest_dir)
     shp = next((p for p in dest_dir.rglob("*.shp")), None)
     print(f"[wells] {state}: extracted -> {dest_dir}"
           + (f" (shapefile: {shp.name})" if shp else " (no .shp found — inspect)"))
+    if shp is None:
+        return None
+
+    import geopandas as gpd
+    gdf = gpd.read_file(shp)
+    if gdf.crs is None:
+        raise RuntimeError(f"{shp} has no CRS; refusing to guess coordinates")
+    gdf = gdf[gdf.geometry.notna() & (gdf.geometry.geom_type == "Point")].copy()
+    gdf = gdf.to_crs("EPSG:4326")
+    gdf.to_file(geojson, driver="GeoJSON")
+    print(f"[wells] {state}: converted {len(gdf)} point wells -> {geojson}")
+    return geojson
 
 
 def main() -> None:

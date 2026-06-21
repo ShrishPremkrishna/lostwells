@@ -158,7 +158,8 @@ def load_unet(model_path: str):
 
 # --- core detection (ported from find_UOWs_in_topomap) ------------------------
 def detect_quad(tif_path: str, bbox, model, preprocess,
-                doc_lat: np.ndarray, doc_lon: np.ndarray):
+                doc_lat: np.ndarray, doc_lon: np.ndarray,
+                batch_size: int = 16):
     """bbox = (west, east, north, south) in lon/lat, or None to skip collar crop."""
     import cv2
     from osgeo import gdal
@@ -195,8 +196,27 @@ def detect_quad(tif_path: str, bbox, model, preprocess,
               & (doc_lon >= westbc - 0.002) & (doc_lon <= eastbc + 0.002))
     wells_lat, wells_lon = doc_lat[in_map], doc_lon[in_map]
 
-    # Tile 256x256 with 25px overlap; pad short edges with white (255).
-    tiles, offsets = [], []
+    if batch_size < 1:
+        raise ValueError("batch_size must be at least 1")
+
+    # Tile 256x256 with 25px overlap; pad short edges with white (255). Predict
+    # incrementally instead of materializing every float32 tile for a full quad.
+    # A typical quad can otherwise require >1 GB of transient RAM in Colab.
+    tile_batch, offset_batch = [], []
+    mask = np.zeros(image.shape[:2], dtype=np.uint8)
+
+    def predict_batch():
+        if not tile_batch:
+            return
+        pred = model.predict(preprocess(np.asarray(tile_batch)), verbose=0)
+        for k, (oi, oj) in enumerate(offset_batch):
+            xs, ys = (pred[k][:, :, 0] > PROB_THRESHOLD).nonzero()
+            xs, ys = xs + oi, ys + oj
+            ok = (xs < mask.shape[0]) & (ys < mask.shape[1])
+            mask[xs[ok], ys[ok]] = 1
+        tile_batch.clear()
+        offset_batch.clear()
+
     for i in range(0, image.shape[0] + OVERLAP, SIZE):
         ii = i - OVERLAP if i != 0 else 0
         for j in range(0, image.shape[1] + OVERLAP, SIZE):
@@ -210,19 +230,11 @@ def detect_quad(tif_path: str, bbox, model, preprocess,
                 inset = np.concatenate(
                     [inset, 255 * np.ones((inset.shape[0], SIZE - inset.shape[1], 3),
                                           dtype=np.uint8)], axis=1)
-            tiles.append(inset)
-            offsets.append((ii, jj))
-    tiles = preprocess(np.array(tiles))
-
-    pred = model.predict(tiles, verbose=0)
-
-    # Stitch thresholded masks back into the cropped-image frame.
-    mask = np.zeros(image.shape[:2], dtype=np.uint8)
-    for k, (oi, oj) in enumerate(offsets):
-        xs, ys = (pred[k][:, :, 0] > PROB_THRESHOLD).nonzero()
-        xs, ys = xs + oi, ys + oj
-        ok = (xs < mask.shape[0]) & (ys < mask.shape[1])
-        mask[xs[ok], ys[ok]] = 1
+            tile_batch.append(inset)
+            offset_batch.append((ii, jj))
+            if len(tile_batch) >= batch_size:
+                predict_batch()
+    predict_batch()
 
     n, _, stats, centroids = cv2.connectedComponentsWithStats(mask, 4, cv2.CV_32S)
     detected = []
@@ -264,6 +276,8 @@ def main() -> None:
     ap.add_argument("--documented", required=True,
                     help="documented wells GeoJSON or CSV (for dedup)")
     ap.add_argument("--out-dir", default="../outputs")
+    ap.add_argument("--batch-size", type=int, default=16,
+                    help="tiles per prediction batch (default: 16; lower if GPU RAM is tight)")
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir).resolve()
@@ -286,7 +300,8 @@ def main() -> None:
     year_m = re.search(r"_(\d{4})_\d+_geo", Path(args.tif).name)
     quad_year = year_m.group(1) if year_m else None
 
-    uows = detect_quad(args.tif, bbox, model, preprocess, doc_lat, doc_lon)
+    uows = detect_quad(args.tif, bbox, model, preprocess, doc_lat, doc_lon,
+                       batch_size=args.batch_size)
     print(f"[infer] {len(uows)} candidate UOWs (>100 m from documented) "
           f"on {Path(args.tif).name}")
 

@@ -1,5 +1,9 @@
 # UNET — Detect Undocumented Orphaned Wells in Appalachia (CATALOG U-Net)
 
+**Colab users:** open [`notebooks/lost_wells_colab.ipynb`](notebooks/lost_wells_colab.ipynb).
+It provides a checkpointed, beginner-oriented path through setup, validation, a
+five-map pilot, resumable batch inference, and duplicate merging.
+
 Run LBNL's **pretrained** CATALOG U-Net (Ciulla et al. 2024) on historical USGS
 topographic maps to find oil/gas **well symbols**, then keep the ones **>100 m
 from any documented well** as candidate **Undocumented Orphaned Wells (UOWs)**.
@@ -98,6 +102,9 @@ the env (model load / preprocessing / threshold) before Appalachia — don't pus
 ```bash
 # a) maps: Appalachian HTMC quads (1:24k, 7.5-min, 1947-1992) + FGDC XML sidecars
 python download_maps.py --states PA OH WV KY --out ../data/maps
+# first pass: newest eligible edition only (~2,700 core-state maps)
+python download_maps.py --states PA OH WV KY --latest-per-quad --manifest-only \
+    --out ../data/maps
 #    (preview size first with --manifest-only)
 
 # b) documented wells for dedup (state registries are best; or reuse the USGS DOW)
@@ -116,6 +123,11 @@ python ../unet/infer.py \
 Each run writes `<quad>_UOWs.geojson`. Loop over the quads in `../data/maps/<State>/`.
 If a quad's XML is missing, pass `--bbox WEST EAST NORTH SOUTH` from
 `../data/maps/manifest.csv` instead (the collar crop still works).
+
+For Colab-scale execution, use `scripts/run_batch.py`. It loads the model once,
+downloads and deletes one raster at a time, and uses each per-map GeoJSON as a
+resume checkpoint. Merge overlapping detections afterward with
+`scripts/merge_detections.py`.
 
 **Hand-off to the app:** merge the per-quad `*_UOWs.geojson` and drop the
 collection at `data/raw/unet_detections/<region>.geojson` — the Lost Wells
