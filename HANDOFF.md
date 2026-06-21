@@ -21,6 +21,11 @@
   **BLOCKERS + RANKED BACKUPS** block.
 - **§7 live backend / UI / deploy** = the cross-cutting delivery layer.
 - **§8 sequencing**, **§9 master endpoint table**, **§10 floors** = execution.
+- **Agent manuals (companion files):** `BROWSER_BASED_AGENT_TRAINING.md` =
+  investigative-agent doctrine + per-goal query ladders (the spec for the §2D
+  investigator); `STRUCTURED_PROPERTY_INFORMATION.md` = coordinate→parcel-owner via
+  free ArcGIS REST (the spec for §3.6 landowner lookup). Read them before building
+  the agent layer.
 - Symbols: ✅ probed live & working · ⚠️ works but flaky/caveated · ❌ dead (use
   the mirror). "FREE" = no key, no payment unless stated.
 
@@ -112,8 +117,16 @@ data/cache/enrich.sqlite           # enrichment response cache
 **Create new:** `apps/web/app/api/investigate/[id]/route.ts` (live SSE),
 `services/engine/pathways.py`, `services/engine/actors.py`,
 `services/engine/story.py`, `services/engine/assemble_cases.py`, plus
-`services/ingest/enrich_tract.py` (or extend `enrich.py`), and a
-`state_registries.py` ingester.
+`services/ingest/enrich_tract.py` (or extend `enrich.py`), a
+`state_registries.py` ingester, and `services/swarm/web/cache.py` (the §2R Redis
+semantic-cache wrapper).
+
+**Sponsor tools — tightly scoped (do not spread them):** **Redis** (`redisvl`)
+is the one semantic cache in front of the agent investigation (§2R); **Browserbase**
+(`@browserbasehq/stagehand`) is the one browser-automation step that resolves
+landowner names for the demo subset (§3.6). Each earns its place against a real
+blocker; neither is wired anywhere else. `graph.py` keeps its in-process
+`MemorySaver()` as-is.
 
 ---
 
@@ -387,16 +400,64 @@ metrics renormalized. Surface any residual metric uniformity honestly.
 
 ## 2D — Agentic investigation on the top ~100–300 (ownership / liability)
 Extend `run_swarm.py` cohort 12 → top ~100–300 by score (+ heroes). Add a
-**structured ownership/liability investigator** track in `investigator.py`:
+**structured ownership/liability investigator** track in `investigator.py`. The
+agent's system prompt and per-goal **query ladders** are specified in
+`BROWSER_BASED_AGENT_TRAINING.md` — implement that doctrine, not the current thin
+prompt: geolocate the coordinate → **county + API well number before searching**
+(a raw lat/long is invisible to a search engine — the #1 failure mode); prefer the
+authoritative database to the open web; ladder/reformulate each question 3–5 ways;
+rank by source authority (gov/regulator > court/SOS > academic > news >
+aggregators-as-leads-only); **pivot on entities** to chain
+operator→officers→bankruptcy→successor; triangulate (≥2 sources or label
+"unverified"); stop on convergence/budget. Tracks:
 - *Documented wells:* operator (from state DB API→operator, §Section 1.3) →
   bankruptcy (PACER is **paid**; free: state SOS corporate registries, news) →
   shell transfers → current responsible party.
-- *Undocumented wells:* current **surface owner** via county parcel data
-  (§Section 3 ownership) + present context (the case is location-driven).
+- *Undocumented wells:* current **surface owner** via the structured parcel
+  lookup (§3.6 + `STRUCTURED_PROPERTY_INFORMATION.md`) + present context (the case
+  is location-driven). Keep **surface owner** (parcel) distinct from **liable
+  operator** (well registry) — severed estates are common in Appalachia.
 - Extend the dossier schema to **structured fields** (operator, transfers,
-  bankruptcy, current_owner) each with **provenance + confidence** (mandatory —
-  Section 3 spends credibility). Keep the "never invent an operator/date/citation"
-  instruction and the honest "no operator on record" behavior.
+  bankruptcy, current_owner), each carrying the per-claim **provenance schema**
+  from `BROWSER_BASED_AGENT_TRAINING.md` §4 (`source_url`, `publisher`,
+  `source_tier`, `date_accessed`, `confidence`, `corroboration`) — no provenance,
+  no ship (Section 3 spends credibility). Keep the "never invent an
+  operator/date/citation" instruction and the honest "no operator on record"
+  behavior.
+- **Spend:** route these agent calls through the §2R Redis semantic cache so
+  repeat / look-alike investigations don't re-pay for search + generation
+  (`PROGRESS.md` §3.10).
+
+## 2R — Agent response caching: Redis (one job, one place)
+The only part of the system that makes expensive, repeatable LLM + web-search
+calls is the agentic investigation — the §2D batch swarm and its §7.2 live-route
+port. `PROGRESS.md` §3.10 flags the cost: re-runs burn API credits, and the live
+route re-investigates from scratch on every click (the swarm and route share no
+cache today). The single most effective Redis use here is **one RedisVL
+`SemanticCache`** in front of those calls — and Redis is used for nothing else.
+
+- **Where:** wrap the Claude + web-search call in `services/swarm/investigator.py`
+  with a small `services/swarm/web/cache.py` helper, and have the §7.2 live route
+  import the same helper. The batch swarm and the live demo then share one cache.
+- **How:** `check()` before calling → on hit, return the cached dossier instantly;
+  on miss, run the agent then `store()`. Set a `ttl` so facts stay fresh; keep
+  `distance_threshold` conservative; scope each entry with RedisVL
+  `filterable_fields` on `well_id` + `county` + a content hash so one well's
+  dossier can **never** be served for another (honesty guard).
+- **Payoff:** the §3.10 spend problem fixed systemically, plus a fast, reliable
+  demo — a repeat or look-alike investigation returns in milliseconds instead of
+  ~120 s and sidesteps the egress idle-drop the swarm already hit.
+- **Deliberately NOT used for** checkpointing, cross-agent memory, or vector
+  search. Those are real Redis features, but they add moving parts (and a 30 MB
+  free-tier cap to manage) without changing the demo outcome; `dossiers.json` and
+  `enrich.sqlite` already cover durable file/point caching. Keep the footprint to
+  the one semantic layer the existing caches can't provide.
+
+**New / changed & deps:** `services/swarm/web/cache.py` (new — the `SemanticCache`
+wrapper, used by both the investigator and the live route); dep `redisvl`
+(+ `redis`); env `REDIS_URL`. Redis Cloud free tier (30 MB / 30 conns) is far
+more than a cache of the cased subset needs; on any Redis outage `check()` simply
+misses and the agent runs live, so caching never blocks the demo (floor = §7.5).
 
 ## 2E — BLOCKERS + RANKED BACKUPS (Section 2)
 - **EPA endpoints flaky** (Envirofacts 500↔200, NWI query host 500, SSA token) →
@@ -481,17 +542,41 @@ email/form-submission to the best match:
 | **EDF** | not a plugger — `https://www.edf.org/orphanwellmap` is a **bulk data source** (120k-well dataset) | seed/ingest | data only |
 
 ## 3.6 BLOCKERS + RANKED BACKUPS (Section 3)
-- **Parcel/landowner: NO free national owner-name layer** (US delegates land
-  records to ~3,200 counties). → (1) per-county ArcGIS REST `/query` for the few
-  demo-well counties (owner field present, e.g. LA County
-  `https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/LA_County_Parcels/FeatureServer/0/query` ✅, Kane County `TaxName` searchable ✅);
-  (2) manual county assessor lookup by APN/coordinate; (3) **Regrid** paid API
-  (~$500–2k/mo, 30-day free Sandbox) only for nationwide owner at scale. Do the
-  landowner case for the **demo subset** only.
+- **Parcel/landowner — database-first** (full recipe in
+  `STRUCTURED_PROPERTY_INFORMATION.md`). There's no free *national* owner layer,
+  but the Appalachian target states are largely solved with **free, deterministic
+  ArcGIS REST `/query`** (point-in-polygon → owner, no scraping): → (1) **OH/WV/KY**
+  statewide/county parcel REST services — discover the owner field via `?f=pjson`
+  first (it varies: `OWNER`/`OWNER_NAME`/`TAXPAYER`/…), pass `inSR=4326`, and watch
+  the NAD27→WGS84 reprojection (a 20–40 m miss loses the parcel); (2) **PA + any
+  gap** → a national-API free trial (**ReportAll** = 1,000 free lookups, covers the
+  demo; **ATTOM** free key adds deeds/sales for the documented-well transfer chain);
+  (3) **interactive-only** county viewers / deeds / skip-trace with no queryable
+  service → **Browserbase** (see below); (4) manual assessor lookup by
+  APN/coordinate. Always separate **surface owner** (parcel) from **liable
+  operator** (state O&G registry). Do the landowner case for the **demo subset** only.
 - **No org API** → all routing is structured outbound email; partner directly
   (email OWC/WDF proposing Lost Wells as a referral pipeline) rather than scrape.
 - **WDF Cloudflare-blocked** → official email/partnership, not scraping.
 - **No state-regulator / EJ-org dataset** → hand-compiled CSVs (above).
+
+**Browserbase — browser automation for the interactive-only fallback (the one
+place it earns its keep).** Most landowner lookups are solved by the free ArcGIS
+REST path above; Browserbase is the **last resort for facts that live only behind
+a UI you cannot query** — PA county assessor viewers with no REST service, county
+**Recorder-of-Deeds** and skip-trace/people-search pages (the "reach a real
+person" step that *completes* the ≥1 end-to-end landowner case), and SOS / court
+entity searches that are forms-only (JS apps + Cloudflare/WAF that plain HTTP and
+Claude web search can't read). A Stagehand agent (`stagehand.act(...)` to drive
+the form, `.extract(schema)` to pull the field) follows the same doctrine as the
+rest of the swarm (`BROWSER_BASED_AGENT_TRAINING.md`: geolocate → county + APN
+first, rank by authority, cite). Run it as a **batch precompute** over the demo
+subset (not the live path); the Browserbase **session replay** is the provenance
+artifact, and the result ships into the case file as a sourced, confidence-tagged
+field. Deps `@browserbasehq/stagehand` (+ `@browserbasehq/sdk`); env
+`BROWSERBASE_API_KEY` / `BROWSERBASE_PROJECT_ID`. Floor: if a queryable service
+exists, use it; if Browserbase is unavailable, fall back to manual assessor/deeds
+lookup for the handful of demo wells.
 
 ---
 
@@ -536,6 +621,10 @@ export const maxDuration = 300;           // Hobby ceiling; 120s run fits well u
   in the Claude Console (admin). Cost ≈ $10/1k searches → bound `max_uses`.
 - `ANTHROPIC_API_KEY` = server-side (unprefixed) Vercel env var, read only in the
   Route Handler. Model `claude-opus-4-8` or `claude-sonnet-4-6` (cheaper, fine).
+- **Before invoking, check the §2R Redis `SemanticCache`** (`check()` → on hit,
+  stream the cached dossier; on miss, run live then `store()`), sharing the cache
+  with the batch swarm. Add `REDIS_URL` as a server-side Vercel env var; a Redis
+  outage falls through to a live call, never blocking the route.
 
 ## 7.3 UI wiring (all additive)
 - `SwarmPanel.tsx`: replace the simulated `replay()` with `fetch()` +
@@ -585,7 +674,9 @@ export const maxDuration = 300;           // Hobby ceiling; 120s run fits well u
    datasets) → human-exposure fully computed; **§Section 2B** GHGI methane;
    **§Section 2C** re-score.
 3. **§Section 2D agentic + §Section 3 engines** → case files for top ~100–300
-   (incl. ≥1 landowner case); deterministic pathway/actor for all wells.
+   (incl. ≥1 landowner case); deterministic pathway/actor for all wells. Put the
+   **§2R Redis `SemanticCache`** in front of the investigator, and run the **§3.6
+   Browserbase** parcel-owner lookup over the demo subset for the landowner case.
 4. **§7 backend + UI** → live SSE route + CaseFile/actor-map UI; **deploy to
    Vercel**.
 5. **Demo arc:** "found wells nobody knew existed → here's the complete case →
@@ -617,6 +708,9 @@ export const maxDuration = 300;           // Hobby ceiling; 120s run fits well u
 | state legislators | `https://data.openstates.org/people/current/<st>.csv` | ✅ CC0 |
 | state O&G operator-by-API | CO/NM/CA/OK/KS REST `/query` (§Section 1.3) | ✅ |
 | live agent route | `apps/web/app/api/investigate/[id]/route.ts` (CREATE) | — |
+| agent response cache (§2R) | RedisVL `SemanticCache` (`check()`/`store()`, `filterable_fields`); Redis Cloud free = 30 MB | ✅ sponsor |
+| landowner owner lookup (§3.6) | parcel ArcGIS REST `/query` (OH/WV/KY, `?f=pjson` for owner field) + ReportAll/ATTOM trial (PA/gaps) | ✅ free/trial |
+| interactive-only fallback (§3.6) | Browserbase Stagehand (`act`/`extract`) for PA viewers / deeds / skip-trace | ✅ sponsor |
 
 ---
 
