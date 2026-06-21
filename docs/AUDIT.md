@@ -31,13 +31,17 @@ is solid. The gap is scope, not breakage.
 
 **Three things to act on first** (detail in §3, §4, §7):
 1. **Build the Act layer** — it's the project, and it's missing.
-2. **Substantiate or restate the "30 million tonnes CO₂" claim** — the repo's own
-   methane model implies ~208k t/yr; 30 Mt is a ~50–144 year cumulative figure
-   that nothing in the code currently computes or labels (§4.1). A judge will do
-   this division.
-3. **Refresh the demo narrative + headline numbers** — `DEMO_SCRIPT.md` still says
-   "1,303 candidates / Britton OK"; the data is now 38,222 and the top wells are in
-   OH/PA (§4.4).
+2. **Validate the methane model before any CO₂ headline.** The repo's own model
+   implies ~208k t CO₂e/yr, and even that is an unvalidated, assumption-driven number
+   (§4.1b); the "30 million tonnes" claim is a ~50–144 year cumulative that nothing in
+   the code computes (§4.1). Prefer the grounded **$2.9B-to-plug-all / $4.7B-fund**
+   framing. A technical judge will probe this first.
+3. **Lead the Appalachia discovery loudly and correctly** — 36,919 of the 38,220 are
+   *your* U-Net run; the attribution, dedup, and demo script are now fixed (§4.2–4.4),
+   but the app UI itself should foreground "we discovered these."
+
+*(Update — this revision: the §4.2 attribution, §4.3 dedup, and §4.4 demo-script
+fixes are now applied; §4.1b adds a standalone methane-calculator issue. See §8.)*
 
 ---
 
@@ -65,12 +69,13 @@ Environment: fresh container, Python 3.11.15, Node 22, `ANTHROPIC_API_KEY` set
 ## 2. Current state by section
 
 ### §1 Discover — **built & verified.** Grade: strong.
-- **38,222 candidates** (100% have lat/lon/state/county/quad) + **117,672**
-  documented columnar backbone (27 states). Heroes (3) fold in at score time.
+- **38,220 candidates** (100% have lat/lon/state/county/quad; deduped from 38,222 —
+  §4.3) + **117,672** documented columnar backbone (27 states). Heroes (3) fold in at
+  score time.
 - Provenance split confirmed via id prefix: **1,303** LBNL CA/OK + **36,919**
   U-Net Appalachia. State spread: PA 14,647 · KY 10,802 · WV 7,723 · OH 3,747 ·
   OK 762 · CA 541.
-- **Flags:** (a) the `source` field is `None` on **all 38,222** records — the
+- **Flags:** (a) the `source` field is `None` on **all 38,220** records — the
   `lbnl`/`unet_2026` provenance tag the build schema supports is never populated,
   so source is only inferable from the id prefix (§4.2). (b) **2 duplicate
   `well_id`s** (`CA_Fairmont Butte_…_geo_1/2`); removing them yields exactly
@@ -78,7 +83,7 @@ Environment: fresh container, Python 3.11.15, Node 22, `ANTHROPIC_API_KEY` set
   paper" discrepancy (PROGRESS §3.7) — these are real dupes, not a parsing mystery.
 
 ### §2 Diagnose — **built & verified.** Grade: strong, with known intrinsic flatness.
-- Tract-join enrichment coverage across the full 38,222: population_1mi **98.2%**,
+- Tract-join enrichment coverage across the full 38,220: population_1mi **98.2%**,
   schools **100%**, hospitals **100%**, drinking_water **100%**, SVI **97.5%**,
   EJ **97.6%**, EJI rank **84.5%**, CEJST **84.5%**. This is materially better than
   the "82% / CA-OK-only" picture some older docs imply — the §2A enrichment clearly
@@ -87,7 +92,7 @@ Environment: fresh container, Python 3.11.15, Node 22, `ANTHROPIC_API_KEY` set
   metrics renormalized (not zeroed) — all enforced by tests, all reproduced here.
 - **Intrinsic flatness (already disclosed, confirmed quantitatively):** every
   candidate is `type_norm=unknown`, `status_norm=undocumented`, `depth_ft` 0%
-  coverage. Result: methane CO₂e has only **2 distinct values** across 38,222
+  coverage. Result: methane CO₂e has only **2 distinct values** across 38,220
   wells, and plug-cost depth premium is never applied. Ranking is genuinely driven
   by population / schools / SVI / EJ (the 4 real signals). The UI badges this
   honestly ("Undifferentiated estimate").
@@ -153,7 +158,7 @@ This product is explicitly honesty-critical, and the hackathon will be judged pa
 on impact claims. These are the spots where the pitch currently outruns the code.
 
 ### 4.1 ⚠️ The "30 million tonnes CO₂" headline is not traceable to the model
-The repo's own methane estimates, summed over all 38,222 candidates:
+The repo's own methane estimates, summed over all 38,220 candidates:
 - **~208,117 t CO₂e/yr** at GWP-100 (mean 5.44 t/well/yr)
 - **~582,677 t CO₂e/yr** at GWP-20 (mean 15.24 t/well/yr)
 
@@ -165,33 +170,80 @@ well lifetime = 30 Mt cumulative, GWP-20" with the math shown, or (b) lead with 
 honest annual number, or (c) lead with the **cost** framing instead — which is far
 stronger and fully defensible:
 
-> **It would cost ~$2.92B to plug every one of the 38,222 wells we found — inside the
+> **It would cost ~$2.92B to plug every one of the 38,220 wells we found — inside the
 > finite $4.7B federal fund.** (Mean $76,269/well, from the Raimi 2021 model already
 > in the repo.)
 
-### 4.2 ⚠️ `meta.json` credits all 38,222 wells to the LBNL paper's DOI
-`meta.json.citations.lbnl` carries `n: 38222` under the Ciulla et al. 2024 paper
-(DOI 10.18141/2452768), but that paper only covers the **1,301** CA/OK detections.
-The **36,919** Appalachia wells came from *your own* fine-tuned U-Net inference run —
-which is the most impressive part of the project and is currently **mis-attributed to
-someone else's paper**. This both *understates your work* and is technically
-incorrect. **Fix:** split into two citations (LBNL CA/OK n=1,301 + "Lost Wells U-Net
-Appalachia inference, 2026" n=36,919) and populate the per-record `source` tag so the
-UI can say "discovered by *us*." (This is a provenance/attribution decision, so I left
-it for you rather than auto-editing — see §8.)
+### 4.1b 🔧 ISSUE: the methane calculator (`services/engine/methane.py`) is unvalidated and assumption-driven — treat every methane figure as suspect until calibrated
+*(Raised at the user's request — the per-well and aggregate methane figures look
+off, and on inspection they rest on load-bearing assumptions that have never been
+validated against these specific wells.)*
 
-### 4.3 ⚠️ "We found ~39,000 / ~38,222" includes 2 duplicate rows
-True unique count is **38,220**. Trivial, but the headline number should match a
-de-duplicated dataset. **Fix:** drop the 2 `CA_Fairmont Butte` dupes in
-`build_unet_candidates.py`/`build_datastore.py` (also makes CA/OK = 1,301, matching
-the paper). Left for you because it shifts the number you cite publicly.
+The arithmetic in `methane.py` is internally correct (`g/hr × 8760/1e6 × GWP` checks
+out). The problem is **everything upstream of the arithmetic**:
 
-### 4.4 ⚠️ `DEMO_SCRIPT.md` is stale vs the current data and your pitch
-It still says "**1,303** candidate undocumented wells," flies to "**Britton,
-Oklahoma**" as the top well, and frames detection as "extends a published U-Net." The
-current dataset is 38,222 and the rescored top-3 are **OH (Cincinnati-West, Toledo)
-and PA (Pittsburgh)** — i.e. the Appalachia story you now lead with. The demo script
-undersells exactly the thing you're most proud of.
+1. **One blend fraction drives the entire total.** Every one of the 38,220
+   candidates is `type=unknown, status=unknown`, so 100% of their methane comes from
+   a single hard-coded split — **0.69 unplugged / 0.31 plugged** (`methane.py:50`) —
+   applied to a regional mean. These are wells detected on **1940s–1980s topo maps**;
+   their real plugging status is genuinely unknown and could skew heavily *plugged*
+   (old, long-abandoned → the total is **overstated**) or heavily *unplugged orphan*
+   (→ **understated**). The headline rides entirely on a guessed constant.
+2. **The per-well number is one of ~2 values, not well-specific.** Region routing
+   collapses to two emission factors (Appalachia unplugged **30.57** g/hr vs rest-US
+   **10.02** g/hr; `methane.py:57,64`). So a viewer reading a "5.6 t CO₂e/yr" on a
+   specific well is really seeing a regional class mean — which is exactly why the
+   figure "seems wrong" as a per-well quantity. (Badged "undifferentiated," but still
+   shown as a precise number.)
+3. **Mean × count is the wrong estimator for a heavy-tailed quantity.** The module's
+   own docstring cites Williams 2021: the top ~10% of wells emit ~91% of the volume.
+   Summing per-well *means* over 38,220 wells to get the **~208k t CO₂e/yr** aggregate
+   ignores that the true total is dominated by a handful of super-emitters that aren't
+   identified here. The aggregate could be off by a large factor in **either**
+   direction and should never be presented as precise.
+4. **GWP vintage is mixed.** `GWP100_FOSSIL=30` with `GWP20_FOSSIL=84` blends IPCC
+   vintages (AR6 fossil CH₄ ≈ 29.8 / 82.5; AR5 ≈ 36 / 84). Pick one vintage and cite
+   it; this shifts every CO₂e number a few percent.
+5. **No calibration.** None of the EF cells or the blend are validated against any
+   measured subset of these wells — they are plausible literature transfers, not
+   estimates fit to the dataset.
+
+**Recommendation:** before any aggregate CO₂ claim ships, (a) independently validate
+`methane.py` against a measured sample or a published orphan-well inventory total for
+the same regions; (b) keep per-well methane explicitly labeled a *class-level
+placeholder*, not a measurement; (c) for any headline, state horizon + GWP +
+estimator, and prefer the **cost** framing (§4.1), which is grounded and defensible.
+This is the single number most likely to be challenged by a technical judge.
+
+### 4.2 ✅ FIXED — `meta.json` no longer credits all 38,220 wells to the LBNL paper
+`meta.json.citations.lbnl` previously carried `n: 38222` under the Ciulla et al. 2024
+paper (DOI 10.18141/2452768), which only covers the **1,301** CA/OK detections. The
+**36,919** Appalachia wells came from *your own* fine-tuned U-Net inference run and
+were mis-attributed to someone else's paper. **Root cause:**
+`build_unet_candidates.py:update_meta()` was overwriting `citations.lbnl.n` with the
+merged total. **Fixed this pass** (§8): the build script now attributes the `unet_*`
+rows to a separate `unet_appalachia` citation and never clobbers the LBNL count;
+`meta.json` now reads `lbnl.n = 1301` (CA/OK) + `unet_appalachia.n = 36919` (this
+project). *Still open (recommendation):* populate the per-record `source` tag so the
+app UI itself can say "discovered by us."
+
+### 4.3 ✅ FIXED — the 2 duplicate rows are removed; count is now 38,220
+The "~38,222" previously included **2 duplicate `well_id`s** (both
+`CA_Fairmont Butte`, a detection on the Kern/LA county line that LBNL lists in *both*
+per-county CSVs — Census geocoder confirms the point is in **Kern**, so the Los
+Angeles rows were spurious). **Fixed this pass** (§8): `build_datastore.build_candidates()`
+now dedupes by `well_id` (keep-first), the committed `candidates.base.json` is deduped
+to **38,220**, `meta.json` and the regenerated web payload reflect 38,220, and CA/OK
+is now exactly **1,301** (matching the paper). Use **38,220** (or "~38,000 /
+~37,000 in Appalachia") publicly, not 38,222/39,000.
+
+### 4.4 ✅ FIXED — `DEMO_SCRIPT.md` rewritten to the current data + pitch
+It previously said "**1,303** candidates," flew to "**Britton, Oklahoma**," and framed
+detection as "extends a published U-Net." **Rewritten this pass** (§8) to lead with the
+**Appalachia discovery** (36,919 of the 38,220), the corrected attribution, the current
+top wells (OH Cincinnati-West/Toledo, PA Pittsburgh), the three hero end-to-end cases,
+the **$2.9B/$4.7B cost** close, and an honesty checklist (incl. the §4.1 methane
+caveat). It now reflects that the live swarm is verified working.
 
 ### 4.5 ℹ️ "Population nearby" label vs scored metric
 The exposure card shows `Pop. (tract)` from `enrichment.population` (tract-level),
@@ -293,24 +345,35 @@ A few non-obvious things about how this is currently framed:
 
 ## 8. Safe fixes applied this pass
 
-Per the agreed scope ("document + safe fixes; flag anything larger"):
-
+**Commit 1 (audit + CI):**
 - **Added `.github/workflows/ci.yml`** — runs the engine tests (with the geo stack so
   all 25 execute) and the web `tsc --noEmit` + production build on every push/PR.
-  Everything it runs is already green in this audit. It deliberately does **not** run
-  ingest/swarm (live APIs / credits) or lint (not configured).
+  Everything it runs is green. Deliberately does **not** run ingest/swarm (live APIs /
+  credits) or lint (not configured).
 
-**Deliberately _not_ auto-changed (left as recommendations, because they alter
-committed data, public-facing numbers, or attribution — your call):**
-- The `meta.json` LBNL-vs-U-Net citation split + per-record `source` tag (§4.2).
-- De-duping the 2 `CA_Fairmont Butte` rows / the 38,222→38,220 number (§4.3).
-- Refreshing `DEMO_SCRIPT.md` to the current data + pitch (§4.4).
-- Pinning `pandas`/`numpy` for byte-reproducible scoring (§5).
-- Adding ESLint config + deps (§5).
+**Commit 2 (the four follow-up fixes you requested):**
+- **§4.1b methane issue** documented above (no code change — flagged for validation).
+- **§4.2 attribution fixed in code + data** — `build_unet_candidates.py:update_meta()`
+  no longer clobbers `citations.lbnl.n`; added a `unet_appalachia` citation in
+  `build_datastore.py` + `build_unet_candidates.py`; `meta.json` now reads `lbnl.n=1301`
+  + `unet_appalachia.n=36919`.
+- **§4.3 dedup fixed in code + data** — `build_datastore.build_candidates()` dedupes by
+  `well_id`; committed `candidates.base.json` deduped to 38,220; `meta.json`
+  `candidate_count`/`candidate_by_region` updated (Los Angeles_CA 237→235).
+- **§4.4 `DEMO_SCRIPT.md` rewritten** to current data, attribution, top wells, hero
+  cases, and the cost close.
+- **Regenerated the derived web payload** (`candidates.web.json` + `detail/` + 
+  `heroes.json` + gitignored `candidates.scored.json`) from the corrected base via
+  `score_candidates.py`, and re-verified the web build. *Reproducibility note:* the
+  regeneration ran under pandas 3.0.3, which shifts **15 / 38,220** composites by ±0.1
+  (a rounding-boundary flip) and reorders within score ties — correct output, version
+  churn; this is exactly why §5 recommends pinning pandas/numpy.
 
-*(Verification side-effect: I regenerated `candidates.scored.json` — gitignored,
-regenerable — to run the scoring/swarm checks. All tracked data files were restored
-to their committed state; `git status` is clean apart from this audit + the CI file.)*
+**Still left as recommendations (alter tooling/deps or need your input):**
+- Populate the per-record `source` tag so the UI can say "discovered by us" (§4.2).
+- Pin `pandas`/`numpy` for byte-reproducible scoring (§5).
+- Add ESLint config + deps (§5).
+- Validate/recalibrate `methane.py` before any aggregate CO₂ claim (§4.1b).
 
 ---
 
