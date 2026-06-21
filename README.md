@@ -58,6 +58,52 @@ cd apps/web && npm install && npm run dev   # http://localhost:3000
 ```
 
 
+## Redis & Browserbase: caching + browser automation
+
+Two infra tools back the agent investigation layer. Both are **fail-open** — on
+any outage they degrade to a live/uncached path rather than breaking the demo.
+
+**Already wired (baseline):**
+- **Redis** — exact-key dossier cache (`dossier:{well_id}`, 30-day TTL) shared by
+  the batch swarm (`services/swarm/web/cache.py`) and the live SSE route
+  (`apps/web/lib/redis-cache.ts`). Also mirrors the knowledge base (`knowledge:all`).
+- **Browserbase** — a `browse_page` escalation tool the batch investigator calls
+  when `web_search` hits a JS/WAF wall (`services/swarm/web/browserbase_client.py`),
+  SQLite-cached per URL, returning a `replay_url` for provenance.
+
+Today Redis means "don't re-investigate the same well" and Browserbase means "let
+the agent open one stubborn page." The roadmap below extends both. Each entry
+notes **where** it lands and **how** it's built.
+
+### Redis — planned enhancements
+
+| Enhancement | How it's implemented |
+|---|---|
+| **Operator/entity cache** (biggest cost lever) | New namespace `operator:{normalized_name}` storing operator history / parent company / bankruptcy status, reused across every well tied to that operator. `investigator.py` checks it before the per-well agent loop; kept strictly separate from `dossier:{well_id}` so a well-specific claim is never cross-served. |
+| **Semantic cache** | Wrap the Claude call with a RedisVL `SemanticCache`; scope each entry with `filterable_fields` on `well_id`/`county` + a conservative `distance_threshold` so look-alike wells reuse *context* without bleeding facts. Lands in `services/swarm/web/cache.py` (+ live-route twin). |
+| **Distributed rate limiter** | Redis token-bucket (`INCR` + key expiry) in front of flaky ArcGIS hosts (WV TAGIS, PA PASDA, OH ArcGIS) and the Anthropic API, shared across parallel ingest workers and serverless invocations. A small `services/ingest/ratelimit.py` helper wraps `requests`. |
+| **Single-flight lock (live route)** | `SETNX` lock + Pub/Sub in `app/api/investigate/[id]/route.ts`: concurrent clicks on the same well run once; the second subscriber streams the same result. |
+| **Promote ingest caches SQLite → Redis** | Move the hot tract/point/registry lookups (`enrich.sqlite`, `enrich_tract.sqlite`, `registries.sqlite`) behind a Redis-backed cache interface so CI, serverless, and dev share one TTL-managed store. |
+| **Knowledge base as a vector index** | Index `knowledge.json` entries with RedisVL so agents semantically retrieve applicable funding/programs/contractors per well instead of loading the whole file — the "living document referenced by future swarms." Lands in `services/swarm/knowledge.py`. |
+| **Tiered TTLs** | Per-key freshness: news ~7d, operator facts ~90d, parcel ownership ~180d, demographic enrichment ~1yr, dossiers 30d. |
+| **SSE resumability + fan-out** | Store live progress in a Redis Stream so dropped connections resume and multiple viewers of one well share a log (Vercel functions are stateless). |
+
+### Browserbase — planned enhancements
+
+| Enhancement | How it's implemented |
+|---|---|
+| **`browse_page` in the live route** | Wire the existing `browse_page` tool (today batch-only) into `app/api/investigate/[id]/route.ts` so live investigations also cross form/login/WAF walls. |
+| **EPA ECHO super-emitter scrape** | Browserbase + Stagehand drives the ECHO interactive map and intercepts its backing network calls to extract events — fills the empty `data/processed/super_emitter.json` that `score_candidates.py` already reads and that backs the DossierPanel "EPA super-emitter nearby" badge. New `services/ingest/super_emitter_browser.py`. |
+| **Parcel lookup for OH/KY/PA** | Stagehand fills county assessor search forms (by address/parcel) and extracts the owner for states with no ArcGIS REST endpoint, completing the `surface_owner` actor in the CaseFile. Extends `services/swarm/web/parcel.py` (WV is the only state wired today). |
+| **Authoritative bankruptcy / corporate status** | Browserbase automates operator-name → PACER bankruptcy case and → state Secretary-of-State business-status lookups (form/WAF/login-walled), replacing news-inferred `bankruptcy_findings` with sourced provenance. |
+| **Funding & carbon-credit portal checks** | Navigate state plugging-program portals and carbon registries (ACR/CAR) to confirm eligibility/deadlines (feeding the knowledge base) and **draft-fill** an application package — never submitting (regulatory line). |
+| **Screenshot + replay evidence** | Capture a screenshot at fetch time alongside the existing `replay_url`, store as immutable evidence, and surface both in the DossierPanel/CaseFile so a claim's source survives even if the page later changes or dies. |
+
+> Guardrails carried through all of the above: **scope cache keys tightly**
+> (well-specific vs. entity-level vs. program-level, so honesty is never
+> compromised by a fuzzy match) and **keep everything fail-open** (an outage
+> degrades to live/uncached, never a broken demo).
+
 See `docs/OVERVIEW.md` for the product overview, `docs/ARCHITECTURE.md` for the
 system design, and `PROGRESS.md` for an honest build-session self-audit.
 Historical build specs live under `docs/archive/`.
