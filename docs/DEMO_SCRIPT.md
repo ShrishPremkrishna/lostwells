@@ -1,7 +1,8 @@
 # Demo script
 
-A ~4-minute walk that leads with human exposure, shows real agentic AI, and stays
-honest about what's live vs pre-computed.
+A ~4-minute walk that leads with human exposure, foregrounds the **Appalachia
+discovery**, shows real agentic AI, and stays honest about what's live vs
+pre-computed. Numbers below match the current datastore (see `data/processed/meta.json`).
 
 ## 0. The hook (human first)
 
@@ -13,66 +14,82 @@ honest about what's live vs pre-computed.
 
 Open the app → the intro overlay states exactly this. Click **Explore the map**.
 
-## 1. The map (reliable core)
+## 1. The discovery (the headline)
 
-- The dim teal field is the **117,672 documented orphaned wells** (USGS DOW, real).
-- The bright amber points are **1,303 candidate undocumented wells** detected by
-  LBNL's U-Net on historical topo maps, colored and sized by impact score.
-- Click the top of the ranked list → the map flies to **Britton, Oklahoma City**:
-  a pre-1951 detected well, tract population ~5,200, **6 schools within a mile**,
-  nearest TULAKES Elementary, SVI 0.99. "This is the thesis: undocumented wells
-  beside schools in the most vulnerable communities."
+> "We ran a fine-tuned LBNL CATALOG U-Net over historical USGS topo maps across
+> Appalachia and surfaced **36,919 previously-undocumented candidate wells** in PA,
+> WV, OH, and KY — on top of LBNL's 1,301 CA/OK detections, for **38,220 candidates**
+> against a **117,672-well** documented backbone. Most of these Appalachian wells
+> have never appeared in any modern inventory."
 
-## 2. The dossier (transparent ranking)
+- The dim teal field is the **117,672 documented** orphaned wells (USGS DOW, real).
+- The bright amber points are the **38,220 candidate undocumented wells**, colored and
+  sized by impact score. The dense Appalachian clusters (Venango/McKean/Clarion PA,
+  the WV panhandle, eastern KY) are **our** U-Net detections — that's the new ground.
+- Attribution is explicit and correct: the CA/OK 1,301 are LBNL's published dataset;
+  the 36,919 Appalachia detections are this project's own inference run (built on
+  LBNL's model). See the About panel / `meta.json` citations.
 
-Open the dossier panel:
+## 2. The ranking (transparent, honest)
+
+Click the top of the ranked list → the map flies to the top-scored wells (currently
+urban Appalachia — **Cincinnati-West & Toledo OH, Pittsburgh-West PA** — undocumented
+wells inside metro areas beside schools and dense population). Open the dossier:
+
 - **Why it ranks here** — the breakdown bar sums exactly to the score; population,
   schools, and social vulnerability dominate. Note the renormalized line: we don't
-  invent data we don't have.
-- **Methane** — clearly labeled a *modeled estimate* (g/hr), with GWP-100 and a
-  GWP-20 urgency sidebar. Never presented as measured.
+  invent data we don't have. (Be candid: for these attribute-less detections, ranking
+  is driven by the 4 real exposure/equity signals; methane/plug-cost are class-level
+  modeled estimates, badged as such.)
+- **Methane** — clearly labeled a *modeled estimate* (EPA GHGI × Kang 2016), with a
+  GWP-20 urgency sidebar. Never presented as measured. (See the methane caveat in
+  `AUDIT.md` §4.1 before quoting any aggregate CO₂ number.)
 - **Plugging economics** — Raimi 2021 base estimate; depth unknown is stated.
-- **Carbon kicker** — honest: covers a few percent of the plug cost. "Most wells
-  need public funds — that's why prioritization under the $4.7B program matters."
+- **Carbon kicker** — honest: covers only a few percent of the plug cost.
 
 ## 3. The agent swarm (real agency, not theater)
 
-Toggle **Agent swarm** → **Replay swarm**. Twelve investigator agents light up.
+Toggle **Agent swarm** → **Replay swarm**. Investigator agents light up.
 
 > "Each well gets an isolated-context Claude investigator that does **open-ended web
 > search** — original operator, bankruptcy filings, shell-company transfers, local
-> news — and writes a structured dossier. This is a LangGraph `Send` map-reduce:
-> one branch per well, single-threaded write at the ranking step. Anthropic's
-> orchestrator-worker beat single-agent by 90.2% on their research eval."
+> news — and writes a structured dossier. LangGraph `Send` map-reduce: one branch per
+> well, single-threaded write at the ranking step."
 
-Open an investigated well → read the **Claude investigation** section: the operator
-history, liability findings, and cited sources are real web results. For an
-undocumented well the agent honestly reports "no operator on record" and pivots to
-the county/state program context — that honesty is the point.
+Open an investigated well → read the **Claude investigation**: operator history,
+liability findings, and cited sources are real web results. For an undocumented well
+the agent honestly reports "no operator on record" and pivots to county/state program
+context — that honesty is the point. *(The panel "Replay" is a deterministic
+animation over cached dossiers; a live run is `python services/swarm/run_swarm.py
+--total 12`, which works against the real API.)*
 
-## 4. The signature reveal (topo → today)
+## 4. The signature reveal — three hero cases (topo → today)
 
-Open a **hero well** (red) → **Reveal topo → today**. Drag the swipe:
+Open a **hero well** (red) → **Reveal topo → today**. Drag the swipe. These three are
+the emotional core and the wells we case end-to-end:
 
-- **AllenCo / St. Vincent School, LA** — 21 urban oil wells under 1,000 ft from a
-  school; the 1953 topo dissolves into today's satellite, the marker pulsing over
-  the neighborhood.
-- **Admiral King Elementary, OH** — the leaking well found under the school gym (2014).
-- **Vowinckel, PA** — six feet from a family's only drinking water; ranks *low* on
+- **Admiral King Elementary, Lorain OH** — a leaking well found **under the school
+  gym** (2014), 375 students evacuated. The historical topo dissolves into today's
+  satellite over the school.
+- **AllenCo / St. Vincent School, Los Angeles** — 21 urban oil wells under 1,000 ft
+  from a school; the 1950s topo dissolves into today's neighborhood.
+- **Vowinckel, PA** — six feet from a family's only drinking water. Ranks *low* on
   aggregate exposure but is a textbook individual-harm case — the score measures
   population impact, and we say so.
 
 ## 5. Close (the product)
 
-> "Detection extends a published U-Net; the swarm is real agentic investigation; the
-> ranking is a transparent, adjustable decision tool. Under a finite $4.7B budget,
-> prioritization is exactly what decision-makers need — that's the product."
+> "We found ~37,000 wells nobody had inventoried, ranked them by who's living on top
+> of them, and — at a modeled **~$76k per well** — it would cost about **$2.9B to plug
+> every one of the 38,220 we surfaced, inside the finite $4.7B federal fund**. The
+> problem was never the money. It was that nobody knew where the wells are. That's
+> what this finds — and the path to plugging is what we build on top of it."
 
 ## Live vs. pre-computed (disclose)
 
 - **Live:** map exploration, click-to-dossier, the topo-dissolve, and a small live
-  swarm run (`python services/swarm/run_swarm.py --total 12`).
-- **Pre-computed & disclosed:** the LBNL U-Net detections, the cached dossiers, the
+  swarm run (`run_swarm.py`) — verified working against the API.
+- **Pre-computed & disclosed:** the U-Net detections, the cached dossiers, the
   enrichment joins. All cached so nothing fragile fetches on stage.
 
 ## Fallbacks
@@ -81,3 +98,11 @@ Open a **hero well** (red) → **Reveal topo → today**. Drag the swipe:
   deterministic.
 - Tile/network hiccup → the deck.gl data layers render from local JSON regardless.
 - Record a screen capture of the swarm + topo-dissolve as a backup video.
+
+## Honesty checklist before presenting (see `AUDIT.md`)
+
+- Don't quote a single aggregate CO₂ figure without stating the horizon + GWP — the
+  model implies ~208k t CO₂e/yr, not an annual 30 Mt (`AUDIT.md` §4.1).
+- Say "candidate / high-confidence detection," never "confirmed well."
+- Credit LBNL's **model** while claiming the **Appalachia discovery** as ours.
+- Positioning: we **mobilize**, we don't plug, take money, or hold liability.

@@ -50,10 +50,22 @@ CITATIONS = {
         "n": None,
     },
     "lbnl": {
-        "name": "U-Net detected potential Undocumented Orphaned Wells (UOWs)",
+        "name": "U-Net detected potential Undocumented Orphaned Wells (UOWs) — CA & OK",
         "authors": "Ciulla, F., Santos, A.L.D., Jordan, P., Kneafsey, T., Biraud, S.C., Varadharajan, C., 2024",
         "doi": "10.1021/acs.est.4c04413",
         "data_doi": "10.18141/2452768",
+        "regions": "CA, OK",
+        "n": None,
+    },
+    # The Appalachia detections are THIS project's own fine-tuned inference run
+    # of the LBNL CATALOG U-Net — distinct from (and far larger than) the
+    # published CA/OK dataset above. Count is filled in by build_unet_candidates.
+    "unet_appalachia": {
+        "name": "Lost Wells U-Net detections — Appalachia (this project)",
+        "description": ("Fine-tuned inference run of the LBNL CATALOG U-Net "
+                        "(Ciulla et al. 2024) over USGS historical topographic quads"),
+        "model": "LBNL CATALOG U-Net (Ciulla et al. 2024)",
+        "regions": "PA, WV, OH, KY",
         "n": None,
     },
     "state_registries": {
@@ -134,6 +146,16 @@ def build_candidates() -> gpd.GeoDataFrame:
                 "lat": lat, "lon": lon,
             })
     df = pd.DataFrame(rows)
+    # A detection on a county line (e.g. Fairmont Butte on the Kern/LA border)
+    # is listed in LBNL's per-county CSVs twice under the SAME UOW id, producing
+    # duplicate well_ids that differ only in county_group. Keep the first
+    # occurrence so each well_id is unique (deterministic: the alphabetically
+    # first county file wins; verified geographically correct for the CA cases).
+    before = len(df)
+    df = df.drop_duplicates(subset="well_id", keep="first").reset_index(drop=True)
+    if len(df) < before:
+        print(f"[candidates] dropped {before - len(df)} duplicate well_id row(s) "
+              "(county-line detections listed in two per-county files)")
     gdf = gpd.GeoDataFrame(
         df, geometry=gpd.points_from_xy(df["lon"], df["lat"]), crs="EPSG:4326"
     )

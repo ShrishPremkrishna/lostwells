@@ -349,8 +349,20 @@ def update_meta(total: int) -> None:
     region = pd.Series([r["county_group"] for r in base]).value_counts()
     meta["candidate_count"] = total
     meta["candidate_by_region"] = region.to_dict()
-    if "citations" in meta and "lbnl" in meta["citations"]:
-        meta["citations"]["lbnl"]["n"] = total
+    # Attribute the U-Net Appalachia rows (well_id 'unet_*') to THIS project's
+    # own inference run, and never clobber the LBNL (CA/OK) citation count with
+    # the merged total — that mis-credited all wells to the published paper.
+    n_unet = sum(1 for r in base if str(r.get("well_id", "")).startswith("unet_"))
+    cits = meta.setdefault("citations", {})
+    if "lbnl" in cits:
+        cits["lbnl"]["n"] = total - n_unet
+    cits.setdefault("unet_appalachia", {
+        "name": "Lost Wells U-Net detections — Appalachia (this project)",
+        "description": ("Fine-tuned inference run of the LBNL CATALOG U-Net "
+                        "(Ciulla et al. 2024) over USGS historical topographic quads"),
+        "model": "LBNL CATALOG U-Net (Ciulla et al. 2024)",
+        "regions": "PA, WV, OH, KY",
+    })["n"] = n_unet
     with open(path, "w") as f:
         json.dump(meta, f, indent=2)
     print(f"[write] {path.relative_to(ROOT)}  "

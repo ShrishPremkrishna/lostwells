@@ -1,7 +1,7 @@
 {
   "generated_utc": "2026-06-20T19:35:07.327680Z",
   "documented_count": 117672,
-  "candidate_count": 38222,
+  "candidate_count": 38220,
   "documented_by_state": {
     "Ohio": 20557,
     "Pennsylvania": 19160,
@@ -68,7 +68,7 @@
     "Lee_KY": 240,
     "Marshall_WV": 238,
     "Monroe_OH": 238,
-    "Los Angeles_CA": 237,
+    "Los Angeles_CA": 235,
     "Allen_KY": 231,
     "Wayne_WV": 230,
     "Sandusky_OH": 230,
@@ -439,11 +439,19 @@
       "n": 117672
     },
     "lbnl": {
-      "name": "U-Net detected potential Undocumented Orphaned Wells (UOWs)",
+      "name": "U-Net detected potential Undocumented Orphaned Wells (UOWs) \u2014 CA & OK",
       "authors": "Ciulla, F., Santos, A.L.D., Jordan, P., Kneafsey, T., Biraud, S.C., Varadharajan, C., 2024",
       "doi": "10.1021/acs.est.4c04413",
       "data_doi": "10.18141/2452768",
-      "n": 38222
+      "n": 1301,
+      "regions": "CA, OK"
+    },
+    "unet_appalachia": {
+      "name": "Lost Wells U-Net detections \u2014 Appalachia (this project)",
+      "description": "Fine-tuned inference run of the LBNL CATALOG U-Net (Ciulla et al. 2024) over USGS historical topographic quads",
+      "model": "LBNL CATALOG U-Net (Ciulla et al. 2024)",
+      "regions": "PA, WV, OH, KY",
+      "n": 36919
     }
   }
 }
