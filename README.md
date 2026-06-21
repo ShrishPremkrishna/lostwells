@@ -16,11 +16,14 @@ apps/web/            Next.js + TS + Tailwind + MapLibre GL + deck.gl + Framer Mo
 services/ingest/     Pull USGS DOW + LBNL + CDC SVI + NCES once -> committed datastore
 services/engine/     Methane proxy, Raimi plug cost, carbon kicker, composite score (+tests)
 services/swarm/      LangGraph Send map-reduce; Claude (Sonnet 4.6) + web search investigators
-services/unet/       LBNL U-Net inference pipeline (documented; run on a GPU host)
+UNET/                LBNL U-Net inference pipeline (real, runnable; GPU host). services/unet/ is a superseded sketch
 data/processed/      Committed datastore the app serves (ingest-once, serve-from-cache)
-docs/                ARCHITECTURE.md, DEMO_SCRIPT.md
-BUILD_PLAN.md        Session-independent build plan & decisions
+docs/                OVERVIEW.md, ARCHITECTURE.md, DEMO_SCRIPT.md, archive/
+CLAUDE.md            Agent-context: setup, conventions, gotchas
 ```
+
+New here? Start with **[`docs/OVERVIEW.md`](docs/OVERVIEW.md)** (5-minute
+product overview) and **[`CLAUDE.md`](CLAUDE.md)** (setup + conventions).
 
 ## Quick start
 
@@ -29,11 +32,22 @@ BUILD_PLAN.md        Session-independent build plan & decisions
 python -m venv .venv && . .venv/bin/activate
 pip install -r services/ingest/requirements.txt -r services/engine/requirements.txt
 python services/ingest/download.py          # fetch raw sources
-python services/ingest/build_datastore.py   # -> data/processed/wells.documented.json, candidates.base.json
+python services/ingest/state_registries.py --states OH,WV,PA,NY,KY   # §1.3 depth/type/status/operator
+python services/ingest/build_datastore.py --states OH,WV,PA,NY,KY    # -> wells.documented.json, candidates.base.json (LBNL CA/OK 1,303), lost_wells.json
+python services/ingest/build_unet_candidates.py                     # + U-Net Appalachia (36,919 PA/KY/WV/OH) -> merge into candidates.base.json (~38,222)
 python services/ingest/enrich.py            # CDC SVI + NCES joins (cached)
+# §2A tract-dedup enrichment (drinking water, hospitals, true 1-mi population, EJ).
+# Needs CENSUS_API_KEY for ACS block-group population; --with-downloads fetches
+# the light-budget layers (PWS service areas ~570MB, hospitals, CEJST, EJI).
+export CENSUS_API_KEY=...                    # free: https://api.census.gov/data/key_signup.html
+python services/ingest/enrich_tract.py --input lost_wells.json --states OH,WV,PA,NY,KY --with-downloads
 python services/ingest/heroes.py
 python services/ingest/enrich.py --input heroes.base.json --output heroes.enrichment.json
-python services/engine/score_candidates.py  # -> candidates.scored.json, heroes.json
+python services/engine/score_candidates.py  # -> candidates.scored.json, heroes.json + slim web payload
+
+# NOTE: candidates.scored.json (~114 MB) is gitignored and must be regenerated
+# by the score step above. The web app reads the committed slim payload
+# (candidates.web.json + detail/NN.json shards) that score_candidates.py emits.
 
 # 2) Agent swarm (needs ANTHROPIC_API_KEY) -> data/processed/dossiers.json
 pip install -r services/swarm/requirements.txt
@@ -44,5 +58,6 @@ cd apps/web && npm install && npm run dev   # http://localhost:3000
 ```
 
 
-See `BUILD_PLAN.md` for the full feasibility audit and `docs/ARCHITECTURE.md`
-for the system design.
+See `docs/OVERVIEW.md` for the product overview, `docs/ARCHITECTURE.md` for the
+system design, and `PROGRESS.md` for an honest build-session self-audit.
+Historical build specs live under `docs/archive/`.

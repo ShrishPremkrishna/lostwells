@@ -11,6 +11,14 @@ export interface Methane {
   t_co2e_gwp20_point: number;
   plugged: boolean;
   label: string;
+  // §2B region × status × type differentiation metadata (all optional).
+  region?: string;
+  well_type?: string;
+  status_known?: boolean;
+  differentiated?: boolean;
+  super_emitter?: boolean | null;
+  super_emitter_dist_m?: number | null;
+  super_emitter_rate_kg_hr?: number | null;
 }
 
 export interface PlugCost {
@@ -77,6 +85,29 @@ export interface Dossier {
   investigated_utc?: string;
 }
 
+// Lite subset shipped in candidates.web.json — everything the map, ranked list,
+// hover tooltip, search, sort, and SwarmPanel need. The heavy detail (full score,
+// methane, plug_cost, carbon, full enrichment) is lazy-loaded per shard for the
+// DossierPanel. `Candidate` is a structural superset, so it stays assignable here.
+export interface CandidateLite {
+  well_id: string;
+  rank: number;
+  lat: number;
+  lon: number;
+  name: string;
+  quad_name?: string;
+  county_group?: string;
+  state: string;
+  score: { composite: number };
+  // Omitted when the well has no nearby population/schools (null fields stripped
+  // from the slim payload), so optional — all reads are null-safe.
+  enrichment?: Pick<
+    Enrichment,
+    "population" | "schools_within_1mi" | "nearest_school_m" | "nearest_school" | "county"
+  >;
+  hero?: { title: string; place: string; confirmed: boolean };
+}
+
 export interface Candidate {
   well_id: string;
   layer: "candidate" | "hero";
@@ -94,6 +125,8 @@ export interface Candidate {
   is_plugged: boolean;
   lat: number;
   lon: number;
+  coord_source?: string;
+  coord_precision?: string;
   nearest_doc_well_m?: number;
   methane: Methane;
   plug_cost: PlugCost;
@@ -142,7 +175,7 @@ export const METRIC_LABELS: Record<string, string> = {
   drinking_water: "Drinking-water proximity",
   svi: "Social Vulnerability",
   ej: "Environmental-justice burden",
-  methane: "Methane proxy (modeled)",
+  methane: "Methane (modeled, region/type)",
   fundability_cost: "Low plug cost (tractable)",
   program_match: "Funding-program match",
 };

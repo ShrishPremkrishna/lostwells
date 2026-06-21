@@ -25,8 +25,13 @@ npm-debug.log*
 *.key
 
 # --- Data: commit processed datastore, ignore bulky raw + caches ---
+# (covers data/raw/htmc/*.csv USGS HTMC inventory + data/raw/tiger/*.zip county/tract caches)
 data/raw/
 data/cache/
+# Full per-well scored economics (>100MB, exceeds GitHub's limit). Regenerable
+# via services/engine/score_candidates.py; the web app reads the slim
+# candidates.web.json + detail/NN.json shards, not this intermediate.
+data/processed/candidates.scored.json
 *.tif
 *.tiff
 *.zip
@@ -38,7 +43,13 @@ models/
 
 # --- U-Net research scratch (agent's local download of the LBNL EDX dataset) ---
 catalog_research/
+# Agent scratch GeoJSON in the repo root (e.g. full_data_core_appala.geojson,
+# core_appalachia_candidates.geojson). These are pipeline outputs, not
+# source-of-truth, and are 8-30 MB each — never commit them. Real tracked
+# GeoJSON (if any) lives under data/ and can be allowlisted here.
+/*.geojson
 
 # --- OS ---
 .DS_Store
 Thumbs.db
+.gstack/

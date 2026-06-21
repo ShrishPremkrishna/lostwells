@@ -5,7 +5,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ScatterplotLayer } from "@deck.gl/layers";
-import type { Candidate, DocumentedWells } from "@/lib/types";
+import type { CandidateLite, DocumentedWells } from "@/lib/types";
 import { scoreRGB, TEAL, DANGER } from "@/lib/colors";
 
 // Free, no-token dark basemap (renders in the user's browser).
@@ -20,14 +20,14 @@ export interface FocusTarget {
 
 interface Props {
   documented: DocumentedWells | null;
-  candidates: Candidate[];
-  heroes: Candidate[];
+  candidates: CandidateLite[];
+  heroes: CandidateLite[];
   selectedId: string | null;
   showDocumented: boolean;
   focus: FocusTarget | null;
   fitNonce: number;
   onSelect: (id: string) => void;
-  onHover: (c: Candidate | null, x: number, y: number) => void;
+  onHover: (c: CandidateLite | null, x: number, y: number) => void;
 }
 
 export default function MapView(props: Props) {
@@ -118,7 +118,7 @@ export default function MapView(props: Props) {
     }
 
     layers.push(
-      new ScatterplotLayer<Candidate>({
+      new ScatterplotLayer<CandidateLite>({
         id: "candidates",
         data: candidates,
         getPosition: (d) => [d.lon, d.lat],
@@ -137,16 +137,16 @@ export default function MapView(props: Props) {
         pickable: true,
         autoHighlight: true,
         highlightColor: [255, 255, 255, 60],
-        onClick: (info) => info.object && onSelect((info.object as Candidate).well_id),
+        onClick: (info) => info.object && onSelect((info.object as CandidateLite).well_id),
         onHover: (info) =>
-          onHover((info.object as Candidate) ?? null, info.x ?? 0, info.y ?? 0),
+          onHover((info.object as CandidateLite) ?? null, info.x ?? 0, info.y ?? 0),
         updateTriggers: { getFillColor: selectedId, getLineColor: selectedId, getLineWidth: selectedId },
       })
     );
 
     if (heroes.length) {
       layers.push(
-        new ScatterplotLayer<Candidate>({
+        new ScatterplotLayer<CandidateLite>({
           id: "heroes",
           data: heroes,
           getPosition: (d) => [d.lon, d.lat],
@@ -160,9 +160,9 @@ export default function MapView(props: Props) {
           getLineWidth: 2,
           lineWidthUnits: "pixels",
           pickable: true,
-          onClick: (info) => info.object && onSelect((info.object as Candidate).well_id),
+          onClick: (info) => info.object && onSelect((info.object as CandidateLite).well_id),
           onHover: (info) =>
-            onHover((info.object as Candidate) ?? null, info.x ?? 0, info.y ?? 0),
+            onHover((info.object as CandidateLite) ?? null, info.x ?? 0, info.y ?? 0),
         })
       );
     }

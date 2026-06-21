@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Candidate, Dossier } from "@/lib/types";
+import type { CandidateLite, Dossier } from "@/lib/types";
 import { scoreCSS } from "@/lib/colors";
 
 const STAGES = [
@@ -27,7 +27,7 @@ export function SwarmPanel({
   onSelect,
 }: {
   open: boolean;
-  candidates: Candidate[];
+  candidates: CandidateLite[];
   dossiers: Record<string, Dossier>;
   onClose: () => void;
   onSelect: (id: string) => void;

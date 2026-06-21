@@ -111,8 +111,42 @@ export function DossierPanel({
             onClick={onTopoDissolve}
             className="mt-3 w-full rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-[12px] font-semibold text-danger transition-colors hover:bg-danger/20"
           >
-            ◐ Reveal {c.hero?.topo?.year ?? "historical"} topo → today
+            ◐ Reveal historical topo → today
           </button>
+        )}
+
+        {c.hero?.citations && c.hero.citations.length > 0 && (
+          <div className="mt-3">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-500">
+              Sources
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {c.hero.citations.map((src, i) => (
+                <a
+                  key={i}
+                  href={src.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-ink-300 hover:border-ember/40 hover:text-ember-soft"
+                >
+                  {src.title.slice(0, 40)}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {c.coord_precision && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {c.coord_precision === "community" && (
+              <span className="rounded bg-ember/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ember-soft">
+                Approximate location
+              </span>
+            )}
+            {c.coord_source && (
+              <span className="text-[10px] text-ink-500">Location: {c.coord_source}</span>
+            )}
+          </div>
         )}
 
         <div className="mt-4 flex items-center gap-4">
@@ -201,6 +235,23 @@ export function DossierPanel({
         {/* methane */}
         <motion.div variants={item}>
           <Card title="Methane proxy" accent="#9ca3af">
+            {(m.differentiated === false || m.super_emitter) && (
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {m.differentiated === false && (
+                  <span className="rounded bg-ember/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ember-soft">
+                    Undifferentiated estimate
+                  </span>
+                )}
+                {m.super_emitter && (
+                  <span className="rounded bg-ember/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ember-soft">
+                    EPA super-emitter nearby
+                    {m.super_emitter_dist_m != null
+                      ? ` · ${(m.super_emitter_dist_m / 1000).toFixed(1)} km`
+                      : ""}
+                  </span>
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <Stat
                 label="Emission rate"
@@ -213,6 +264,13 @@ export function DossierPanel({
                 sub={`${m.t_co2e_gwp20_point} t/yr at GWP-20`}
               />
             </div>
+            {(m.region || m.well_type) && (
+              <p className="mt-2 text-[10px] text-ink-500">
+                {m.region}
+                {m.region && m.well_type ? " · " : ""}
+                {m.well_type}
+              </p>
+            )}
             <p className="mt-2 text-[10px] text-ink-500">{m.label}</p>
           </Card>
         </motion.div>

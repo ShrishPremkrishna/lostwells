@@ -66,13 +66,18 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 # Project Specific Context
 
+> For a 5-minute product overview (the numbers, the 4-stage pipeline, a
+> data-flow diagram, and what's real vs. placeholder) see
+> [`docs/OVERVIEW.md`](docs/OVERVIEW.md).
+
 ## What this is
 
 Lost Wells finds candidate *undocumented* orphaned oil & gas wells, sends a Claude
 agent swarm to investigate each, and ranks them by human impact. It is a monorepo:
 a Python ingestion/scoring/swarm pipeline that materializes a committed JSON
 datastore, and a Next.js web app that serves that datastore statically (no backend
-at runtime).
+at runtime). The candidate universe is **~38,222 wells** (CA, OK, PA, WV, OH, KY)
+scored against a **117,672-well** documented backbone.
 
 ## Core architecture: ingest once, serve from cache
 
@@ -82,15 +87,23 @@ once and writes `data/processed/*.json` (committed to git). The web app and the
 swarm read only from that datastore. Pipeline stages, in order:
 
 1. `services/ingest/download.py` → fetch raw sources into `data/raw/`
-2. `services/ingest/build_datastore.py` → `wells.documented.json` (117,672 DOW wells, compact columnar), `candidates.base.json` (1,303 LBNL U-Net candidates), `meta.json`
-3. `services/ingest/enrich.py` → `enrichment.json` (CDC SVI + NCES schools; threaded, SQLite-cached in `data/cache/enrich.sqlite`)
-4. `services/ingest/heroes.py` then `enrich.py --input heroes.base.json --output heroes.enrichment.json`
-5. `services/engine/score_candidates.py` → `candidates.scored.json` (ranked), `heroes.json`
-6. `services/swarm/run_swarm.py` → `dossiers.json` (needs `ANTHROPIC_API_KEY`)
+2. `services/ingest/build_datastore.py` → `wells.documented.json` (117,672 DOW wells, compact columnar), `candidates.base.json` (1,303 LBNL CA/OK candidates), `meta.json`
+3. `services/ingest/build_unet_candidates.py` → converts U-Net Appalachia detections (36,919 PA/KY/WV/OH) into the base schema and **merges** into `candidates.base.json` (→ ~38,222). Idempotent: strips prior `unet_*` rows each run.
+4. `services/ingest/enrich.py` → `enrichment.json` (CDC SVI + NCES schools; threaded, SQLite-cached in `data/cache/enrich.sqlite`)
+5. `services/ingest/enrich_tract.py` → tract-dedup human-exposure/EJ join (drinking water, hospitals, true 1-mi population, EJ). Needs `CENSUS_API_KEY`; `--with-downloads` fetches the heavy layers (PWS, hospitals, CEJST, EJI).
+6. `services/ingest/heroes.py` then `enrich.py --input heroes.base.json --output heroes.enrichment.json`
+7. `services/engine/score_candidates.py` → `candidates.scored.json` (ranked) + the slim `candidates.web.json` + `detail/NN.json` shards, plus `heroes.json`
+8. `services/swarm/run_swarm.py` → `dossiers.json` (needs `ANTHROPIC_API_KEY`)
 
 The app's `predev`/`prebuild` hook runs `scripts/copy-data.mjs`, copying
 `data/processed/*.json` into `apps/web/public/data/`. The app `fetch`es these as
 static files (`apps/web/lib/data.ts`), so it deploys to Vercel with no server.
+
+**Regenerate the full economics file:** `data/processed/candidates.scored.json`
+(~114 MB) is **gitignored** (exceeds GitHub's limit) but is required to
+regenerate the web payload. The committed slim payload
+(`candidates.web.json` + `detail/NN.json` shards) is what the app loads; rebuild
+the full file from source via `python services/engine/score_candidates.py`.
 
 ## Commands
 
@@ -100,18 +113,21 @@ cd apps/web && npm install
 npm run dev          # http://localhost:3000 (predev copies the datastore)
 npm run build        # prebuild copies the datastore
 npm run lint
+npx tsc --noEmit     # type-check (map needs WebGL; won't render headless)
 
 # Ranking engine tests (pure-compute, no network)
 pip install -r services/engine/requirements.txt
-cd services/engine && pytest tests/                 # 11 unit tests
-pytest tests/test_engine.py::test_breakdown_sums_to_composite   # single test
+pytest services/engine/tests                                     # 25 unit tests
+pytest services/engine/tests/test_engine.py::test_breakdown_sums_to_composite   # single test
 
 # Re-materialize the datastore from source (rarely needed; it's committed)
 pip install -r services/ingest/requirements.txt -r services/engine/requirements.txt
 python services/ingest/download.py
-python services/ingest/build_datastore.py
+python services/ingest/build_datastore.py            # LBNL CA/OK base (1,303)
+python services/ingest/build_unet_candidates.py      # + U-Net Appalachia -> merge -> ~38,222
 python services/ingest/enrich.py
-python services/engine/score_candidates.py
+python services/ingest/enrich_tract.py --input candidates.base.json --states CA,OK --with-downloads
+python services/engine/score_candidates.py           # -> candidates.scored.json (gitignored) + slim web payload
 
 # Agent swarm (spends real API credits; default skips already-cached wells)
 pip install -r services/swarm/requirements.txt
@@ -131,10 +147,15 @@ invariants the tests enforce and you must preserve:
 - **Missing metrics are renormalized over the present metrics, never imputed as zero.**
 
 `score_candidates.py` scores candidates + heroes together so they share one
-percentile distribution. `methane.py`/`plugcost.py`/`carbon.py` produce modeled
+percentile distribution, then emits the slim web payload (`candidates.web.json` +
+`detail/NN.json` shards). `methane.py`/`plugcost.py`/`carbon.py` produce modeled
 estimates (always labeled as such in the UI). Note: for undocumented candidates,
-methane/plug-cost/program-match are near-constant, so real ranking is driven by
-population, schools, SVI, and EJ (see `PROGRESS.md` §2.3).
+methane/plug-cost/program-match are near-constant (`program_match` is a degenerate
+placeholder, down-weighted to 0.05), so real ranking is driven by population,
+schools, SVI, and EJ (see `PROGRESS.md` §2.3). The `super_emitter.json` /
+`heroes.super_emitter.json` sidecars are read here and back the DossierPanel
+"EPA super-emitter nearby" badge; they're currently empty `{}` (producer
+`super_emitter.py` not run with data) but harmlessly default — keep them.
 
 ### Agent swarm (`services/swarm/`)
 LangGraph `Send` map-reduce: `graph.py` fans out one `Send` per well to the
@@ -164,4 +185,5 @@ TF 2.15 / Keras 2 / segmentation-models 1.0.1 environment constraints.
 
 - Python pipeline scripts compute paths from `ROOT = Path(__file__).resolve().parents[2]` and use sibling-module imports via `sys.path.insert`. Run them as files, not as `python -m`.
 - The datastore JSON is committed; don't regenerate it casually (enrichment/swarm hit live APIs and spend credits).
+- Don't `git add .` blindly and never commit `*.geojson` scratch (root is gitignored via `/*.geojson`) or `candidates.scored.json` (gitignored; regenerable).
 - This product is societal-impact and honesty-critical: many numbers are modeled estimates or proxies. `PROGRESS.md` is a candid self-audit of every data limitation — read it before presenting or extending any metric, and never strip the "modeled estimate"/proxy disclosures from the UI.
