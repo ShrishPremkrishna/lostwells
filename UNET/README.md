@@ -1,8 +1,10 @@
 # UNET — Detect Undocumented Orphaned Wells in Appalachia (CATALOG U-Net)
 
-**Colab users:** open [`notebooks/lost_wells_colab.ipynb`](notebooks/lost_wells_colab.ipynb).
-It provides a checkpointed, beginner-oriented path through setup, validation, a
-five-map pilot, resumable batch inference, and duplicate merging.
+**Colab users:** follow [`COLAB_RUNBOOK.md`](COLAB_RUNBOOK.md). The educational
+master notebook is [`notebooks/lost_wells_colab.ipynb`](notebooks/lost_wells_colab.ipynb),
+and full runs use the state workers in `notebooks/run_{PA,WV,OH,KY}_colab.ipynb`.
+The exact 2,705-map first-pass population is committed as
+[`manifests/core_appalachia_latest.csv`](manifests/core_appalachia_latest.csv).
 
 Run LBNL's **pretrained** CATALOG U-Net (Ciulla et al. 2024) on historical USGS
 topographic maps to find oil/gas **well symbols**, then keep the ones **>100 m

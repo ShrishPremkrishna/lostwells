@@ -26,7 +26,10 @@ def merge(features, radius_m):
         lon, lat = feature["geometry"]["coordinates"][:2]
         key = (math.floor(lon / cell), math.floor(lat / cell))
         match = None
-        for dx in (-1, 0, 1):
+        # A longitude degree is shorter than a latitude degree away from the
+        # equator. Search enough longitude cells to cover radius_m at this lat.
+        lon_cells = max(1, math.ceil(1 / max(abs(math.cos(math.radians(lat))), 0.1)))
+        for dx in range(-lon_cells, lon_cells + 1):
             for dy in (-1, 0, 1):
                 for ci in buckets[(key[0] + dx, key[1] + dy)]:
                     if distance_m((lon, lat), clusters[ci]["center"]) <= radius_m:
