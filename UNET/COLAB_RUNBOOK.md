@@ -68,9 +68,51 @@ On account 2:
    `lostwells_unet`.
 5. Create `MyDrive/lostwells_unet_outputs/` for account 2's own output files.
 
+The resulting account-2 Drive tree must look like this:
+
+```text
+MyDrive/
+  lostwells_unet/                 # shortcut to account 1's shared input folder
+    lbnl/
+      unet_model.h5
+    wells/
+      PA.geojson
+      WV.geojson
+      OH.geojson
+      KY.geojson
+  lostwells_unet_outputs/         # real folder owned by account 2; initially empty
+```
+
+The blank `lostwells_unet_outputs` folder by itself is not sufficient. The OH
+and KY workers must also be able to read the model and all four registries
+through `MyDrive/lostwells_unet`. The committed manifest comes from the GitHub
+checkout and does not need to be copied into Drive.
+
 The OH and KY notebooks default to reading the shortcut and writing to
 `lostwells_unet_outputs`. If the shortcut has a different name, edit only
 `INPUT_ROOT` in section 2 of those notebooks.
+
+### Extra files in account 1's `lostwells_unet`
+
+Extra folders do not affect inference. Workers read only the exact model and
+registry paths above and write only to their configured output paths. Do not
+delete extra files merely to make the folder look cleaner.
+
+If Drive storage becomes constrained, the following are normally safe to
+remove after checking the required inputs and outputs exist:
+
+- Previously downloaded `.tif` map images; the workers download maps into
+  temporary Colab storage.
+- Cached USGS inventory ZIP/CSV files; the exact manifest is committed in Git.
+- Extracted PA/KY shapefile folders after `PA.geojson` and `KY.geojson` exist.
+- Temporary pilot or review GeoTIFFs.
+
+Keep:
+
+- `lbnl/unet_model.h5`.
+- All four `wells/<STATE>.geojson` files.
+- Every state output directory and merged GeoJSON.
+- California reference files if you want to rerun the optional Kern validation.
 
 ## 4. Push the code before opening Colab
 
