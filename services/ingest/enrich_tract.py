@@ -74,9 +74,21 @@ CEJST_CSV_URL = ("https://dblew8dgr6ajz.cloudfront.net/data-versions/2.0/"
 # Base is lowercase /onemapservices/ and the Hosted 2022 service.
 EJI_URL = ("https://onemap.cdc.gov/onemapservices/rest/services/Hosted/"
            "Environmental_Justice_Index_2022_Hosted/FeatureServer/0/query")
+# CDC/ATSDR SVI 2022 tract layer (same source enrich.py uses per-point). Here it
+# is bulk-pulled per state and joined locally by tract GEOID so the score-moving
+# vulnerability/equity fields reach the full universe, not just sampled points.
+SVI_URL = ("https://onemap.cdc.gov/OneMapServices/rest/services/SVI/"
+           "CDC_ATSDR_Social_Vulnerability_Index_2022_USA/FeatureServer/2/query")
+SVI_FIELDS = ("E_TOTPOP,E_DAYPOP,RPL_THEMES,EP_POV150,EP_MINRTY,"
+              "RPL_THEME1,RPL_THEME3,COUNTY,ST_ABBR,FIPS")
+# NCES Public School Locations (same layer as enrich.py); bulk-pulled once and
+# joined locally for schools_within_1mi + nearest_school over the full universe.
+SCHOOLS_URL = ("https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/"
+               "Public_School_Locations_Current/FeatureServer/0/query")
 
 MILE_M = 1609.34
 HOSP_RADIUS_M = 5 * MILE_M
+SCHOOL_RADIUS_M = MILE_M
 
 ACS_BASE = "https://api.census.gov/data/2023/acs/acs5"
 ACS_KEY = os.environ.get("CENSUS_API_KEY", "")
@@ -287,6 +299,94 @@ def hospital_proximity(wells: gpd.GeoDataFrame, hosp: gpd.GeoDataFrame) -> dict:
     return out
 
 
+# --- schools (point nearest + 1-mile count) ------------------------------
+def load_schools(with_downloads: bool, bbox: Optional[tuple] = None
+                 ) -> Optional[gpd.GeoDataFrame]:
+    """Fetch public-school points (NCES), cached to a local GeoJSON.
+
+    Mirrors ``load_hospitals``: any fetch error degrades gracefully to ``None``
+    (the schools metric renormalizes out) rather than crashing enrichment.
+    """
+    dest = RAW / "schools.geojson"
+    if dest.exists() and dest.stat().st_size > 0:
+        return gpd.read_file(dest)
+    if not with_downloads:
+        print("[schools] not cached; pass --with-downloads to fetch")
+        return None
+    PAGE = 2000
+    params = {
+        "where": "1=1", "outFields": "NAME,CITY,STATE", "outSR": "4326",
+        "returnGeometry": "true", "f": "geojson", "resultRecordCount": PAGE,
+    }
+    if bbox:
+        params.update({
+            "geometry": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
+            "geometryType": "esriGeometryEnvelope", "inSR": "4326",
+            "spatialRel": "esriSpatialRelIntersects",
+        })
+    feats: list = []
+    offset = 0
+    sess = requests.Session()
+    try:
+        while True:
+            params["resultOffset"] = offset
+            r = sess.get(SCHOOLS_URL, params=params, timeout=120)
+            r.raise_for_status()
+            page = r.json().get("features", [])
+            feats.extend(page)
+            if len(page) < PAGE:
+                break
+            offset += len(page)
+    except Exception as e:  # noqa: BLE001 — degrade, don't crash the pipeline
+        print(f"[schools] fetch failed ({e}); skipping (metric renormalizes out)")
+        return None
+    if not feats:
+        return None
+    g = gpd.GeoDataFrame.from_features(feats, crs="EPSG:4326")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    g.to_file(dest, driver="GeoJSON")
+    return g
+
+
+def school_proximity(wells: gpd.GeoDataFrame, schools: gpd.GeoDataFrame) -> dict:
+    """well_id -> {schools_within_1mi, nearest_school, nearest_school_m,
+    school_names}. Mirrors ``hospital_proximity`` (metric CRS, sjoin_nearest +
+    1-mile buffer count)."""
+    name_col = "NAME" if "NAME" in schools.columns else None
+    w_m = wells[["well_id", "geometry"]].to_crs(METRIC_CRS)
+    s_cols = ["geometry"] + ([name_col] if name_col else [])
+    s_m = schools[s_cols].to_crs(METRIC_CRS)
+
+    # nearest school (distance + name)
+    near = gpd.sjoin_nearest(w_m, s_m, how="left", distance_col="d")
+    near = near[~near.index.duplicated(keep="first")]
+    nearest_name = (dict(zip(near["well_id"], near[name_col]))
+                    if name_col else {})
+
+    # count + names within 1 mile via buffer join
+    buf = w_m.copy()
+    buf["geometry"] = buf.geometry.buffer(SCHOOL_RADIUS_M)
+    cnt = gpd.sjoin(buf, s_m, how="left", predicate="intersects")
+    hit = cnt.dropna(subset=["index_right"])
+    counts = hit.groupby("well_id").size()
+    names_by_well: dict = {}
+    if name_col:
+        for wid, nm in zip(hit["well_id"], hit[name_col]):
+            if nm is not None and not pd.isna(nm):
+                names_by_well.setdefault(wid, []).append(nm)
+
+    out: dict = {}
+    for wid, d in zip(near["well_id"], near["d"]):
+        nm = nearest_name.get(wid)
+        out[wid] = {
+            "schools_within_1mi": int(counts.get(wid, 0)),
+            "nearest_school": nm if nm is not None and not pd.isna(nm) else None,
+            "nearest_school_m": round(float(d), 1) if d is not None and not pd.isna(d) else None,
+            "school_names": names_by_well.get(wid, [])[:8],
+        }
+    return out
+
+
 # --- true 1-mile population via BG areal interpolation -------------------
 def _acs_bg_population(states: list[str]) -> dict:
     """12-digit BG GEOID -> ACS5 2023 total population (B01003_001E)."""
@@ -414,6 +514,99 @@ def load_eji(states: list[str], with_downloads: bool) -> dict:
     return out
 
 
+def _parse_svi_attrs(a: dict) -> dict:
+    """SVI feature attributes -> per-tract enrichment dict (mirrors
+    ``enrich.svi_lookup``: filter -999, derive the EJ proxy, map themes)."""
+    pov, minr = a.get("EP_POV150"), a.get("EP_MINRTY")
+    ej = None
+    if pov not in (None, -999) and minr not in (None, -999):
+        ej = round(max(0.0, min(1.0, (pov + minr) / 200.0)), 4)
+    pop = a.get("E_TOTPOP")
+    day = a.get("E_DAYPOP")
+    return {
+        "population": int(pop) if pop not in (None, -999) else None,
+        "daytime_population": int(day) if day not in (None, -999) else None,
+        "svi": a.get("RPL_THEMES") if a.get("RPL_THEMES") not in (None, -999) else None,
+        "poverty_pct": pov if pov not in (None, -999) else None,
+        "minority_pct": minr if minr not in (None, -999) else None,
+        "ej": ej,
+        "svi_socioeconomic": a.get("RPL_THEME1") if a.get("RPL_THEME1") not in (None, -999) else None,
+        "svi_minority": a.get("RPL_THEME3") if a.get("RPL_THEME3") not in (None, -999) else None,
+        "county": a.get("COUNTY"),
+    }
+
+
+def load_svi(states: list[str], with_downloads: bool) -> dict:
+    """tract GEOID (11) -> SVI/equity fields, bulk-pulled per state and keyed
+    by FIPS (mirrors ``load_eji``; parses like ``enrich.svi_lookup``).
+
+    Probes one state to confirm the ``ST_ABBR`` where-clause is supported,
+    falling back to ``FIPS LIKE '<fips>%'`` if the field is absent.
+    """
+    if not with_downloads:
+        print("[svi] pass --with-downloads to fetch")
+        return {}
+    sess = requests.Session()
+    out: dict = {}
+    PAGE = 2000  # SVI layer maxRecordCount
+
+    def _where(st: str) -> str:
+        return f"ST_ABBR='{st}'"
+
+    # Probe the first state: if ST_ABBR is unsupported, fall back to FIPS LIKE.
+    use_fips_like = False
+    if states:
+        st0 = states[0]
+        try:
+            r = sess.get(SVI_URL, params={
+                "where": _where(st0), "outFields": SVI_FIELDS,
+                "returnGeometry": "false", "f": "json", "resultRecordCount": 1,
+            }, timeout=120)
+            r.raise_for_status()
+            body = r.json()
+            if body.get("error") or "features" not in body:
+                use_fips_like = True
+        except Exception as e:  # noqa: BLE001
+            print(f"[svi] ST_ABBR probe failed ({e}); using FIPS LIKE fallback")
+            use_fips_like = True
+        if use_fips_like:
+            print("[svi] ST_ABBR unsupported; using FIPS LIKE where-clause")
+
+    for st in states:
+        if use_fips_like:
+            fips = T.STATE_FIPS.get(st.upper())
+            if not fips:
+                continue
+            where = f"FIPS LIKE '{fips}%'"
+        else:
+            where = _where(st)
+        params = {
+            "where": where, "outFields": SVI_FIELDS,
+            "returnGeometry": "false", "f": "json", "resultRecordCount": PAGE,
+        }
+        offset = 0
+        while True:
+            params["resultOffset"] = offset
+            try:
+                r = sess.get(SVI_URL, params=params, timeout=120)
+                r.raise_for_status()
+                feats = r.json().get("features", [])
+            except Exception as e:  # noqa: BLE001
+                print(f"[svi] {st} failed: {e}")
+                break
+            for ft in feats:
+                a = ft.get("attributes", {})
+                g = a.get("FIPS")
+                if g is None:
+                    continue
+                out[str(g).zfill(11)] = _parse_svi_attrs(a)
+            if len(feats) < PAGE:
+                break
+            offset += len(feats)
+    print(f"[svi] loaded {len(out):,} tract SVI records")
+    return out
+
+
 # --- driver ---------------------------------------------------------------
 def run(input_file: str = "lost_wells.json", states: Optional[list[str]] = None,
         with_downloads: bool = False, output_file: str = "enrichment.json",
@@ -448,13 +641,18 @@ def run(input_file: str = "lost_wells.json", states: Optional[list[str]] = None,
     hospitals = load_hospitals(with_downloads, bbox=bbox)
     if hospitals is not None and not hospitals.empty:
         hosp = hospital_proximity(wells, hospitals)
+    sch: dict = {}
+    schools = load_schools(with_downloads, bbox=bbox)
+    if schools is not None and not schools.empty:
+        sch = school_proximity(wells, schools)
 
     # --- 1-mile population (BG areal interpolation) ----------------------
     pop1mi = population_1mi(wells, states)
 
-    # --- EJ (tract-keyed) ------------------------------------------------
+    # --- EJ + SVI (tract-keyed) ------------------------------------------
     cejst = load_cejst(with_downloads)
     eji = load_eji(states, with_downloads)
+    svi = load_svi(states, with_downloads)
 
     # --- merge into per-well enrichment (preserve existing enrichment.json) -
     existing_path = PROC / output_file
@@ -465,7 +663,9 @@ def run(input_file: str = "lost_wells.json", states: Optional[list[str]] = None,
         except Exception:  # noqa: BLE001
             enrichment = {}
 
-    n_dw = n_hosp = n_pop = n_ej = 0
+    SVI_KEYS = ("svi", "svi_socioeconomic", "svi_minority", "poverty_pct",
+                "minority_pct", "ej", "population", "daytime_population", "county")
+    n_dw = n_hosp = n_pop = n_ej = n_sch = n_svi = 0
     new_tract_rows: dict = {}
     new_point_rows: dict = {}
     for rec in records:
@@ -478,6 +678,8 @@ def run(input_file: str = "lost_wells.json", states: Optional[list[str]] = None,
             cur["drinking_water_score"] = dw_scores[wid]; n_dw += 1
         if wid in hosp:
             cur.update(hosp[wid]); n_hosp += 1
+        if wid in sch:
+            cur.update(sch[wid]); n_sch += 1
         if wid in pop1mi:
             cur["population_1mi"] = pop1mi[wid]; n_pop += 1
         if geoid:
@@ -485,14 +687,24 @@ def run(input_file: str = "lost_wells.json", states: Optional[list[str]] = None,
                 cur["cejst_disadvantaged"] = cejst[geoid]
             if geoid in eji:
                 cur["eji_rank"] = eji[geoid]; n_ej += 1
+            if geoid in svi:
+                # Fill-missing-first: the per-point SVI from enrich.py is the
+                # same tract value, so only backfill fields not already set.
+                for k, v in svi[geoid].items():
+                    if v is not None and cur.get(k) is None:
+                        cur[k] = v
+                if cur.get("svi") is not None:
+                    n_svi += 1
             cur["tract_geoid"] = geoid
-            tr = {k: cur[k] for k in ("cejst_disadvantaged", "eji_rank")
+            tr = {k: cur[k] for k in ("cejst_disadvantaged", "eji_rank", *SVI_KEYS)
                   if k in cur}
             if tr:
                 new_tract_rows[geoid] = tr
         pk = _pkey(rec["lat"], rec["lon"])
         pr = {k: cur[k] for k in ("drinking_water_score", "hospitals_within_5mi",
-                                  "nearest_hospital_m", "population_1mi") if k in cur}
+                                  "nearest_hospital_m", "population_1mi",
+                                  "schools_within_1mi", "nearest_school",
+                                  "nearest_school_m", "school_names") if k in cur}
         if pr:
             new_point_rows[pk] = pr
         enrichment[wid] = cur
@@ -512,6 +724,7 @@ def run(input_file: str = "lost_wells.json", states: Optional[list[str]] = None,
     print(f"[enrich_tract] wrote {existing_path.relative_to(ROOT)}")
     print(f"  drinking_water {n_dw}/{n} | hospitals {n_hosp}/{n} | "
           f"population_1mi {n_pop}/{n} | eji {n_ej}/{n}")
+    print(f"  svi {n_svi}/{n} | schools {n_sch}/{n}")
 
 
 def main() -> None:

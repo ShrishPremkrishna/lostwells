@@ -31,11 +31,16 @@ METRIC_CONFIG = {
     "program_match":    ("program_match", "direct"),
 }
 
+# Phase 5 rebalance: with SVI + schools + EJ now at near-full coverage across all
+# ~38k wells, the near-constant program_match (≈1.0 for every well) was diluting
+# the real signal, so it is halved; the freed weight flows to the mission-core
+# climate (methane), equity (ej), and the genuinely discriminating plug cost.
+# Sum = 1.00. Groups: human_exposure 0.44 / equity 0.22 / methane 0.17 / fundability 0.17.
 DEFAULT_WEIGHTS = {
-    "population": 0.15, "schools": 0.12, "hospitals": 0.05, "drinking_water": 0.13,
-    "svi": 0.12, "ej": 0.08,
-    "methane": 0.15,
-    "fundability_cost": 0.10, "program_match": 0.10,
+    "population": 0.15, "schools": 0.12, "hospitals": 0.05, "drinking_water": 0.12,
+    "svi": 0.12, "ej": 0.10,
+    "methane": 0.17,
+    "fundability_cost": 0.12, "program_match": 0.05,
 }
 
 GROUPS = {
